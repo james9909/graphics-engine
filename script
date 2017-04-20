@@ -1,0 +1,29 @@
+push
+    rotate
+    y 30
+    rotate
+    x 20
+    move
+    150 100 0
+    # body
+    box
+    0 0 0 125 175 60
+    # right arm
+    box
+    -40 125 -15 40 175 30
+    # left arm
+    box
+    125 125 -15 40 175 30
+    # right leg
+    box
+    10 -100 -20 40 100 40
+    # left leg
+    box
+    75 -100 -20 40 100 40
+    # head
+    sphere
+    75 225 -20 40
+pop
+display
+save
+out.png
