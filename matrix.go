@@ -68,6 +68,14 @@ func (m Matrix) Get(r, c int) float64 {
 	return m.data[r][c]
 }
 
+func (m Matrix) GetColumn(c int) []float64 {
+	col := make([]float64, m.rows)
+	for i := 0; i < m.rows; i++ {
+		col[i] = m.Get(i, c)
+	}
+	return col
+}
+
 func (m Matrix) GetMatrix() [][]float64 {
 	return m.data
 }
