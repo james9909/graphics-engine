@@ -127,10 +127,10 @@ func (m *Matrix) AddColumn(column []float64) error {
 
 func MakeTranslation(x, y, z float64) *Matrix {
 	data := [][]float64{
-		[]float64{1, 0, 0, float64(x)},
-		[]float64{0, 1, 0, float64(y)},
-		[]float64{0, 0, 1, float64(z)},
-		[]float64{0, 0, 0, 1},
+		{1, 0, 0, float64(x)},
+		{0, 1, 0, float64(y)},
+		{0, 0, 1, float64(z)},
+		{0, 0, 0, 1},
 	}
 	m := NewMatrixFromData(data)
 	return m
@@ -138,10 +138,10 @@ func MakeTranslation(x, y, z float64) *Matrix {
 
 func MakeDilation(sx, sy, sz float64) *Matrix {
 	data := [][]float64{
-		[]float64{sx, 0, 0, 0},
-		[]float64{0, sy, 0, 0},
-		[]float64{0, 0, sz, 0},
-		[]float64{0, 0, 0, 1},
+		{sx, 0, 0, 0},
+		{0, sy, 0, 0},
+		{0, 0, sz, 0},
+		{0, 0, 0, 1},
 	}
 	m := NewMatrixFromData(data)
 	return m
@@ -154,10 +154,10 @@ func degreesToRadians(degrees float64) float64 {
 func MakeRotX(theta float64) *Matrix {
 	theta = degreesToRadians(theta)
 	data := [][]float64{
-		[]float64{1, 0, 0, 0},
-		[]float64{0, math.Cos(theta), -math.Sin(theta), 0},
-		[]float64{0, math.Sin(theta), math.Cos(theta), 0},
-		[]float64{0, 0, 0, 1},
+		{1, 0, 0, 0},
+		{0, math.Cos(theta), -math.Sin(theta), 0},
+		{0, math.Sin(theta), math.Cos(theta), 0},
+		{0, 0, 0, 1},
 	}
 	m := NewMatrixFromData(data)
 	return m
@@ -166,10 +166,10 @@ func MakeRotX(theta float64) *Matrix {
 func MakeRotY(theta float64) *Matrix {
 	theta = degreesToRadians(theta)
 	data := [][]float64{
-		[]float64{math.Cos(theta), 0, -math.Sin(theta), 0},
-		[]float64{0, 1, 0, 0},
-		[]float64{math.Sin(theta), 0, math.Cos(theta), 0},
-		[]float64{0, 0, 0, 1},
+		{math.Cos(theta), 0, -math.Sin(theta), 0},
+		{0, 1, 0, 0},
+		{math.Sin(theta), 0, math.Cos(theta), 0},
+		{0, 0, 0, 1},
 	}
 	m := NewMatrixFromData(data)
 	return m
@@ -178,10 +178,10 @@ func MakeRotY(theta float64) *Matrix {
 func MakeRotZ(theta float64) *Matrix {
 	theta = degreesToRadians(theta)
 	data := [][]float64{
-		[]float64{math.Cos(theta), -math.Sin(theta), 0, 0},
-		[]float64{math.Sin(theta), math.Cos(theta), 0, 0},
-		[]float64{0, 0, 1, 0},
-		[]float64{0, 0, 0, 1},
+		{math.Cos(theta), -math.Sin(theta), 0, 0},
+		{math.Sin(theta), math.Cos(theta), 0, 0},
+		{0, 0, 1, 0},
+		{0, 0, 0, 1},
 	}
 	m := NewMatrixFromData(data)
 	return m
@@ -239,16 +239,16 @@ func (m *Matrix) AddHermite(x0, y0, x1, y1, dx0, dy0, dx1, dy1 float64) {
 
 func generateHermiteCoefficients(p0, m0, p1, m1 float64) *Matrix {
 	hermite := NewMatrixFromData([][]float64{
-		[]float64{2, -2, 1, 1},
-		[]float64{-3, 3, -2, -1},
-		[]float64{0, 0, 1, 0},
-		[]float64{1, 0, 0, 0},
+		{2, -2, 1, 1},
+		{-3, 3, -2, -1},
+		{0, 0, 1, 0},
+		{1, 0, 0, 0},
 	})
 	coefficients := NewMatrixFromData([][]float64{
-		[]float64{p0},
-		[]float64{p1},
-		[]float64{m0},
-		[]float64{m1},
+		{p0},
+		{p1},
+		{m0},
+		{m1},
 	})
 	m, _ := hermite.Multiply(coefficients)
 	return m
@@ -273,16 +273,16 @@ func (m *Matrix) AddBezier(x0, y0, x1, y1, x2, y2, x3, y3 float64) error {
 
 func generateBezierCoefficients(p0, p1, p2, p3 float64) *Matrix {
 	bezier := NewMatrixFromData([][]float64{
-		[]float64{-1, 3, -3, 1},
-		[]float64{3, -6, 3, 0},
-		[]float64{-3, 3, 0, 0},
-		[]float64{1, 0, 0, 0},
+		{-1, 3, -3, 1},
+		{3, -6, 3, 0},
+		{-3, 3, 0, 0},
+		{1, 0, 0, 0},
 	})
 	coefficients := NewMatrixFromData([][]float64{
-		[]float64{p0},
-		[]float64{p1},
-		[]float64{p2},
-		[]float64{p3},
+		{p0},
+		{p1},
+		{p2},
+		{p3},
 	})
 	m, _ := bezier.Multiply(coefficients)
 	return m
