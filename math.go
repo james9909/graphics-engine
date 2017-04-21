@@ -23,11 +23,3 @@ func DotProduct(a, b []float64) float64 {
 	}
 	return sum
 }
-
-func Magnitude(a []float64) float64 {
-	sum := 0.0
-	for i := range a {
-		sum += a[i] * a[i]
-	}
-	return math.Sqrt(sum)
-}
