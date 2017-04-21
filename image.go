@@ -31,6 +31,10 @@ func NewImage(height, width int) *Image {
 }
 
 func (image *Image) DrawLines(em *Matrix, c color.Color) {
+	if em.cols < 2 {
+		fmt.Println("2 or more points are required for drawing")
+		return
+	}
 	m := em.GetMatrix()
 	for i := 0; i < em.cols-1; i += 2 {
 		x0, y0 := m[0][i], m[1][i]
@@ -40,20 +44,22 @@ func (image *Image) DrawLines(em *Matrix, c color.Color) {
 }
 
 func (image *Image) DrawPolygons(em *Matrix, c color.Color) {
+	if em.cols < 3 {
+		fmt.Println("3 or more points are required for drawing")
+		return
+	}
 	m := em.GetMatrix()
-	if em.cols >= 3 {
-		for i := 0; i < em.cols-2; i += 3 {
-			x0, y0, z0 := m[0][i], m[1][i], m[2][i]
-			x1, y1, z1 := m[0][i+1], m[1][i+1], m[2][i+1]
-			x2, y2, z2 := m[0][i+2], m[1][i+2], m[2][i+2]
-			p0 := []float64{x0, y0, z0}
-			p1 := []float64{x1, y1, z1}
-			p2 := []float64{x2, y2, z2}
-			if isVisible(p0, p1, p2) {
-				image.DrawLine(int(x0), int(y0), int(x1), int(y1), c)
-				image.DrawLine(int(x1), int(y1), int(x2), int(y2), c)
-				image.DrawLine(int(x2), int(y2), int(x0), int(y0), c)
-			}
+	for i := 0; i < em.cols-2; i += 3 {
+		x0, y0, z0 := m[0][i], m[1][i], m[2][i]
+		x1, y1, z1 := m[0][i+1], m[1][i+1], m[2][i+1]
+		x2, y2, z2 := m[0][i+2], m[1][i+2], m[2][i+2]
+		p0 := []float64{x0, y0, z0}
+		p1 := []float64{x1, y1, z1}
+		p2 := []float64{x2, y2, z2}
+		if isVisible(p0, p1, p2) {
+			image.DrawLine(int(x0), int(y0), int(x1), int(y1), c)
+			image.DrawLine(int(x1), int(y1), int(x2), int(y2), c)
+			image.DrawLine(int(x2), int(y2), int(x0), int(y0), c)
 		}
 	}
 }
