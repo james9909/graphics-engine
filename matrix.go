@@ -7,6 +7,7 @@ import (
 	"math"
 )
 
+// Matrix represents a matrix
 type Matrix struct {
 	data [][]float64
 	rows int
@@ -26,6 +27,7 @@ func (m Matrix) String() string {
 	return buffer.String()
 }
 
+// NewMatrix returns a new Matrix with a given number of rows and columns
 func NewMatrix(rows, cols int) *Matrix {
 	data := make([][]float64, rows)
 	for i := 0; i < rows; i++ {
@@ -38,6 +40,7 @@ func NewMatrix(rows, cols int) *Matrix {
 	}
 }
 
+// NewMatrixFromData returns a new Matrix with preset data
 func NewMatrixFromData(data [][]float64) *Matrix {
 	m := NewMatrix(len(data), len(data[0]))
 	m.data = data
@@ -46,6 +49,7 @@ func NewMatrixFromData(data [][]float64) *Matrix {
 	return m
 }
 
+// IdentityMatrix returns an identity matrix
 func IdentityMatrix(size int) *Matrix {
 	m := NewMatrix(size, size)
 	for i := 0; i < size; i++ {
@@ -60,14 +64,17 @@ func IdentityMatrix(size int) *Matrix {
 	return m
 }
 
+// Copy returns a copy of a Matrix
 func (m *Matrix) Copy() *Matrix {
 	return NewMatrixFromData(m.data)
 }
 
+// Get returns the value at a certain row and column in a Matrix
 func (m Matrix) Get(r, c int) float64 {
 	return m.data[r][c]
 }
 
+// GetColumn returns a column of the Matrix
 func (m Matrix) GetColumn(c int) []float64 {
 	col := make([]float64, m.rows)
 	for i := 0; i < m.rows; i++ {
@@ -76,16 +83,19 @@ func (m Matrix) GetColumn(c int) []float64 {
 	return col
 }
 
+// GetMatrix returns a 2D array that represents the matrix
 func (m Matrix) GetMatrix() [][]float64 {
 	return m.data
 }
 
+// SetMatrix sets the data for a Matrix
 func (m *Matrix) SetMatrix(data [][]float64) {
 	m.data = data
 	m.rows = len(data)
 	m.cols = len(data[0])
 }
 
+// Scale scales a matrix by a factor
 func (m *Matrix) Scale(n float64) *Matrix {
 	m2 := NewMatrix(m.rows, m.cols)
 	for i := 0; i < m.rows; i++ {
@@ -96,6 +106,7 @@ func (m *Matrix) Scale(n float64) *Matrix {
 	return m2
 }
 
+// Multiply returns the product of two Matrices
 func (m *Matrix) Multiply(m2 *Matrix) (*Matrix, error) {
 	if m.cols != m2.rows {
 		return nil, fmt.Errorf("column/row mismatch: (%d x %d) * (%d x %d)", m.rows, m.cols, m2.rows, m2.cols)
@@ -114,6 +125,7 @@ func (m *Matrix) Multiply(m2 *Matrix) (*Matrix, error) {
 	return product, nil
 }
 
+// AddColumn adds a new column to the matrix
 func (m *Matrix) AddColumn(column []float64) error {
 	if len(column) != m.rows {
 		return errors.New("incorrect number of rows")
@@ -125,6 +137,7 @@ func (m *Matrix) AddColumn(column []float64) error {
 	return nil
 }
 
+// MakeTranslation returns a translation Matrix
 func MakeTranslation(x, y, z float64) *Matrix {
 	data := [][]float64{
 		{1, 0, 0, float64(x)},
@@ -136,6 +149,7 @@ func MakeTranslation(x, y, z float64) *Matrix {
 	return m
 }
 
+// MakeDilation returns a dilation matrix
 func MakeDilation(sx, sy, sz float64) *Matrix {
 	data := [][]float64{
 		{sx, 0, 0, 0},
@@ -151,6 +165,7 @@ func degreesToRadians(degrees float64) float64 {
 	return degrees * math.Pi / 180.0
 }
 
+// MakeRotX returns a rotation matrix for the X axis
 func MakeRotX(theta float64) *Matrix {
 	theta = degreesToRadians(theta)
 	data := [][]float64{
@@ -163,6 +178,7 @@ func MakeRotX(theta float64) *Matrix {
 	return m
 }
 
+// MakeRotY returns a rotation matrix for the Y axis
 func MakeRotY(theta float64) *Matrix {
 	theta = degreesToRadians(theta)
 	data := [][]float64{
@@ -175,6 +191,7 @@ func MakeRotY(theta float64) *Matrix {
 	return m
 }
 
+// MakeRotZ returns a rotation matrix for the Z axis
 func MakeRotZ(theta float64) *Matrix {
 	theta = degreesToRadians(theta)
 	data := [][]float64{
@@ -187,6 +204,7 @@ func MakeRotZ(theta float64) *Matrix {
 	return m
 }
 
+// AddPoint adds a point to the matrix as a column
 func (m *Matrix) AddPoint(x, y, z float64) {
 	column := []float64{
 		x,
@@ -196,17 +214,20 @@ func (m *Matrix) AddPoint(x, y, z float64) {
 	m.AddColumn(column)
 }
 
+// AddEdge adds two points to the matrix
 func (m *Matrix) AddEdge(x0, y0, z0, x1, y1, z1 float64) {
 	m.AddPoint(x0, y0, z0)
 	m.AddPoint(x1, y1, z1)
 }
 
+// AddPolygon adds three points to the matrix
 func (m *Matrix) AddPolygon(x0, y0, z0, x1, y1, z1, x2, y2, z2 float64) {
 	m.AddPoint(x0, y0, z0)
 	m.AddPoint(x1, y1, z1)
 	m.AddPoint(x2, y2, z2)
 }
 
+// AddCircle adds a series of points defining a circle to the matrix
 func (m *Matrix) AddCircle(cx, cy, cz, radius float64) {
 	x0 := cx + radius
 	y0 := cy
@@ -221,6 +242,7 @@ func (m *Matrix) AddCircle(cx, cy, cz, radius float64) {
 	}
 }
 
+// AddHermite adds a series of points defining a hermite curve to the matrix
 func (m *Matrix) AddHermite(x0, y0, x1, y1, dx0, dy0, dx1, dy1 float64) {
 	coefficientsX := generateHermiteCoefficients(x0, dx0, x1, dx1)
 	coefficientsY := generateHermiteCoefficients(y0, dy0, y1, dy1)
@@ -254,6 +276,7 @@ func generateHermiteCoefficients(p0, m0, p1, m1 float64) *Matrix {
 	return m
 }
 
+// AddBezier adds a series of points defining a bezier curve to the matrix
 func (m *Matrix) AddBezier(x0, y0, x1, y1, x2, y2, x3, y3 float64) error {
 	coefficientsX := generateBezierCoefficients(x0, x1, x2, x3)
 	coefficientsY := generateBezierCoefficients(y0, y1, y2, y3)
@@ -288,6 +311,7 @@ func generateBezierCoefficients(p0, p1, p2, p3 float64) *Matrix {
 	return m
 }
 
+// AddBox adds a series of points defining a 3D box to the matrix
 func (m *Matrix) AddBox(x, y, z, width, height, depth float64) {
 	x1 := x + width
 	y1 := y + height
@@ -313,6 +337,7 @@ func (m *Matrix) AddBox(x, y, z, width, height, depth float64) {
 	m.AddPolygon(x1, y1, z, x1, y, z1, x1, y1, z1)
 }
 
+// AddSphere adds a series of points defining a 3D sphere to the matrix
 func (m *Matrix) AddSphere(cx, cy, cz, radius float64) {
 	points := NewMatrix(4, 0)
 	points.generateSphere(cx, cy, cz, radius)
@@ -360,6 +385,7 @@ func (m *Matrix) generateSphere(cx, cy, cz, radius float64) {
 	}
 }
 
+// AddTorus adds a series of points defining a 3D torus to the matrix
 func (m *Matrix) AddTorus(cx, cy, cz, r1, r2 float64) {
 	points := NewMatrix(4, 0)
 	points.generateTorus(cx, cy, cz, r1, r2)

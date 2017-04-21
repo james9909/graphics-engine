@@ -4,16 +4,19 @@ import (
 	"bytes"
 )
 
+// Stack is a stack of matrices
 type Stack struct {
 	stack []*Matrix
 }
 
+// NewStack returns a new stack
 func NewStack() *Stack {
 	return &Stack{
 		stack: make([]*Matrix, 0, 100),
 	}
 }
 
+// Pop returns and removes the top matrix in the stack
 func (s *Stack) Pop() *Matrix {
 	if s.IsEmpty() {
 		return nil
@@ -24,10 +27,12 @@ func (s *Stack) Pop() *Matrix {
 	return ret
 }
 
+// Push pushes a new matrix onto the stack
 func (s *Stack) Push(m *Matrix) {
 	s.stack = append(s.stack, m)
 }
 
+// Peek returns the top matrix in the stack
 func (s *Stack) Peek() *Matrix {
 	if s.IsEmpty() {
 		return nil
@@ -36,6 +41,7 @@ func (s *Stack) Peek() *Matrix {
 	return s.stack[length-1]
 }
 
+// IsEmpty returns true if the stack is empty, false otherwise
 func (s *Stack) IsEmpty() bool {
 	return len(s.stack) == 0
 }

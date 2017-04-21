@@ -10,12 +10,14 @@ import (
 	"strings"
 )
 
+// Image represents an image
 type Image struct {
 	frame  [][]color.Color
 	height int
 	width  int
 }
 
+// NewImage returns a new Image with the given height and width
 func NewImage(height, width int) *Image {
 	frame := make([][]color.Color, height)
 	for i := 0; i < height; i++ {
@@ -30,6 +32,7 @@ func NewImage(height, width int) *Image {
 	return image
 }
 
+// DrawLines draws all lines onto the Image
 func (image *Image) DrawLines(em *Matrix, c color.Color) {
 	if em.cols < 2 {
 		fmt.Println("2 or more points are required for drawing")
@@ -42,6 +45,7 @@ func (image *Image) DrawLines(em *Matrix, c color.Color) {
 	}
 }
 
+// DrawPolygons draws all polygons onto the Image
 func (image *Image) DrawPolygons(em *Matrix, c color.Color) {
 	if em.cols < 3 {
 		fmt.Println("3 or more points are required for drawing")
@@ -59,6 +63,7 @@ func (image *Image) DrawPolygons(em *Matrix, c color.Color) {
 	}
 }
 
+// DrawLine draws a single line onto the Image
 func (image *Image) DrawLine(x1, y1, x2, y2 int, c color.Color) {
 	if x1 > x2 {
 		x1, x2 = x2, x1
@@ -135,6 +140,7 @@ func (image Image) drawOctant8(x1, y1, x2, y2, A, B int, c color.Color) {
 	}
 }
 
+// Fill completely fills the Image with a single color
 func (image Image) Fill(c color.Color) {
 	for y := 0; y < image.height; y++ {
 		for x := 0; x < image.width; x++ {
@@ -154,6 +160,7 @@ func (image Image) set(x, y int, c color.Color) error {
 	return nil
 }
 
+// SavePpm will save the Image as a ppm
 func (image Image) SavePpm(name string) error {
 	var buffer bytes.Buffer
 	buffer.WriteString(fmt.Sprintf("P3 %d %d %d\n", image.width, image.height, 255))
@@ -173,6 +180,7 @@ func (image Image) SavePpm(name string) error {
 	return err
 }
 
+// Save will save an Image into a given format
 func (image Image) Save(name string) error {
 	index := strings.Index(name, ".")
 	if index == -1 {
@@ -197,6 +205,7 @@ func (image Image) Save(name string) error {
 	return nil
 }
 
+// Display displays the Image
 func (image Image) Display() error {
 	filename := "tmp.ppm"
 	err := image.SavePpm(filename)

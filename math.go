@@ -1,7 +1,6 @@
 package main
 
-import "math"
-
+// CrossProduct calculates the cross product of two vectors
 func CrossProduct(a, b []float64) []float64 {
 	if len(a) < 3 || len(b) < 3 {
 		panic("invalid vector length")
@@ -13,6 +12,7 @@ func CrossProduct(a, b []float64) []float64 {
 	return cross
 }
 
+// DotProduct calculates the dot product of two vectors
 func DotProduct(a, b []float64) float64 {
 	if len(a) != len(b) {
 		panic("vector lengths are unequal")

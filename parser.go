@@ -10,6 +10,7 @@ import (
 	"strings"
 )
 
+// Parser is a script parser
 type Parser struct {
 	frame *Image
 	em    *Matrix
@@ -17,6 +18,7 @@ type Parser struct {
 	cs    *Stack
 }
 
+// NewParser returns a new parser
 func NewParser() *Parser {
 	cs := NewStack()
 	cs.Push(IdentityMatrix(4))
@@ -28,6 +30,7 @@ func NewParser() *Parser {
 	}
 }
 
+// ParseFile parses a file for commands and executes them
 func (p *Parser) ParseFile(filename string) error {
 	f, err := os.Open(filename)
 	if err != nil {
