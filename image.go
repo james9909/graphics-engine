@@ -199,9 +199,12 @@ func (image Image) Save(name string) error {
 
 func (image Image) Display() error {
 	filename := "tmp.ppm"
-	image.SavePpm(filename)
+	err := image.SavePpm(filename)
+	if err != nil {
+		return err
+	}
 	args := []string{filename}
-	_, err := exec.Command("display", args...).Output()
+	_, err = exec.Command("display", args...).Output()
 	if err != nil {
 		return err
 	}
