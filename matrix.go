@@ -313,7 +313,7 @@ func (m *Matrix) AddSphere(cx, cy, cz, radius float64) {
 	endLongitude := steps - 1
 	for latitude := 0; latitude < endLatitude; latitude++ {
 		latitudeStart := latitude * steps
-		nextLatitudeStart := (latitudeStart + steps) % points.cols
+		nextLatitudeStart := latitudeStart + steps
 		for longitude := 0; longitude < endLongitude; longitude++ {
 			index := latitudeStart + longitude
 			indexNextLatitude := nextLatitudeStart + longitude
