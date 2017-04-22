@@ -44,7 +44,7 @@ func (p *Parser) ParseFile(filename string) error {
 		if len(command) == 0 {
 			continue
 		}
-		if command[0:1] == "#" {
+		if command[0] == '#' {
 			continue
 		}
 		switch command {
