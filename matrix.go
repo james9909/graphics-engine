@@ -7,6 +7,13 @@ import (
 	"math"
 )
 
+const (
+	// StepSize is the number of steps to take when drawing 2D curves
+	StepSize float64 = (1.0 / 100.0)
+	//CircularStepSize is the number of steps to take when drawing 3D curves
+	CircularStepSize float64 = (1.0 / 20.0)
+)
+
 // Matrix represents a matrix
 type Matrix struct {
 	data [][]float64

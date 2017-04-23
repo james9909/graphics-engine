@@ -10,6 +10,16 @@ import (
 	"strings"
 )
 
+// DrawingMode defines the type of each drawing mode
+type DrawingMode int
+
+const (
+	// DrawLineMode is a draw argument that draws 2D lines onto the Image
+	DrawLineMode = 0
+	// DrawPolygonMode is a draw argument that draws 3D polygons onto the Image
+	DrawPolygonMode = 1
+)
+
 // Parser is a script parser
 type Parser struct {
 	frame *Image

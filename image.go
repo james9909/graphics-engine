@@ -10,6 +10,13 @@ import (
 	"strings"
 )
 
+const (
+	// DefaultHeight is the default height of an Image
+	DefaultHeight = 500
+	// DefaultWidth is the default width of an Image
+	DefaultWidth = 500
+)
+
 // Image represents an image
 type Image struct {
 	frame  [][]color.Color
