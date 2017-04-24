@@ -15,9 +15,9 @@ type DrawingMode int
 
 const (
 	// DrawLineMode is a draw argument that draws 2D lines onto the Image
-	DrawLineMode = 0
+	DrawLineMode DrawingMode = iota
 	// DrawPolygonMode is a draw argument that draws 3D polygons onto the Image
-	DrawPolygonMode = 1
+	DrawPolygonMode
 )
 
 // Parser is a script parser
