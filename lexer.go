@@ -66,8 +66,8 @@ func (l *Lexer) accept(s string) bool {
 	return false
 }
 
-// acceptAll consumes all consecutive runes in a valid charset
-func (l *Lexer) acceptAll(s string) {
+// acceptRun consumes all consecutive runes in a valid charset
+func (l *Lexer) acceptRun(s string) {
 	for l.accept(s) {
 	}
 }
@@ -173,10 +173,10 @@ func lexNumber(l *Lexer) stateFn {
 	// accept an optional sign
 	l.accept("+-")
 
-	l.acceptAll("0123456789")
+	l.acceptRun("0123456789")
 	// accept floating points
 	if l.accept(".") {
-		l.acceptAll("0123456789")
+		l.acceptRun("0123456789")
 	}
 	next := l.peek()
 	// if the next character is not numeric, then treat it as a string
