@@ -222,7 +222,7 @@ func (p *Parser) scale(sx, sy, sz float64) error {
 	dilation := MakeDilation(sx, sy, sz)
 
 	top := p.cs.Pop()
-	top, err := dilation.Multiply(top)
+	top, err := top.Multiply(dilation)
 	if err != nil {
 		return err
 	}
@@ -233,7 +233,7 @@ func (p *Parser) scale(sx, sy, sz float64) error {
 func (p *Parser) move(x, y, z float64) error {
 	translation := MakeTranslation(x, y, z)
 	top := p.cs.Pop()
-	top, err := translation.Multiply(top)
+	top, err := top.Multiply(translation)
 	if err != nil {
 		return err
 	}
@@ -256,7 +256,7 @@ func (p *Parser) rotate(axis string, theta float64) error {
 	}
 
 	top := p.cs.Pop()
-	top, err := rotation.Multiply(top)
+	top, err := top.Multiply(rotation)
 	if err != nil {
 		return err
 	}
