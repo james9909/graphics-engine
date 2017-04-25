@@ -179,7 +179,7 @@ func (p *Parser) next() Token {
 
 func (p *Parser) nextFloat() float64 {
 	if p.requireNext(tInt) != nil && p.requireNext(tFloat) != nil {
-		panic(fmt.Errorf("%s expected, got %s", tFloat, p.peek().tt))
+		panic(fmt.Errorf("expected %v, got %v", tFloat, p.peek().tt))
 	}
 	v, _ := strconv.ParseFloat(p.next().value, 64)
 	return v
@@ -187,7 +187,7 @@ func (p *Parser) nextFloat() float64 {
 
 func (p *Parser) nextString() string {
 	if p.requireNext(tString) != nil {
-		panic(fmt.Errorf("%s expected, got %s", tString, p.peek().tt))
+		panic(fmt.Errorf("expected %v, got %v", tString, p.peek().tt))
 	}
 	return p.next().value
 }
@@ -208,7 +208,7 @@ func (p *Parser) peek() Token {
 func (p *Parser) requireNext(tt TokenType) error {
 	other := p.peek().tt
 	if other != tt {
-		return fmt.Errorf("unexpected %v; expected %v", other, tt)
+		return fmt.Errorf("expected %v, got %v", tt, other)
 	}
 	return nil
 }
