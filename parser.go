@@ -63,8 +63,6 @@ func (p *Parser) ParseFile(filename string) error {
 			if err != nil {
 				return err
 			}
-		case tComment:
-			continue
 		default:
 			return fmt.Errorf("unexpected token %v", t)
 		}
@@ -173,6 +171,9 @@ func (p *Parser) next() Token {
 		return token
 	}
 	token := <-p.lexer.out
+	for token.tt == tComment {
+		token = <-p.lexer.out
+	}
 	return token
 }
 
