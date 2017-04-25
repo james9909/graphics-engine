@@ -43,8 +43,9 @@ var commands = []string{
 // NewLexer returns a new lexer
 func NewLexer() *Lexer {
 	return &Lexer{
-		out: make(chan Token),
-		buf: make([]rune, 0, 10),
+		out:   make(chan Token),
+		buf:   make([]rune, 0, 10),
+		state: lexRoot,
 	}
 }
 
@@ -112,7 +113,7 @@ func (l *Lexer) keep(r rune) {
 // run lexes the input and executes all state functions
 func (l *Lexer) run() {
 	defer close(l.out)
-	for l.state = lexRoot; l.state != nil; {
+	for l.state != nil {
 		l.state = l.state(l)
 	}
 }
