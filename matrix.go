@@ -177,8 +177,8 @@ func MakeRotX(theta float64) *Matrix {
 	theta = degreesToRadians(theta)
 	data := [][]float64{
 		{1, 0, 0, 0},
-		{0, math.Cos(theta), -math.Sin(theta), 0},
-		{0, math.Sin(theta), math.Cos(theta), 0},
+		{0, math.Cos(theta), math.Sin(theta), 0},
+		{0, -math.Sin(theta), math.Cos(theta), 0},
 		{0, 0, 0, 1},
 	}
 	m := NewMatrixFromData(data)
@@ -202,8 +202,8 @@ func MakeRotY(theta float64) *Matrix {
 func MakeRotZ(theta float64) *Matrix {
 	theta = degreesToRadians(theta)
 	data := [][]float64{
-		{math.Cos(theta), -math.Sin(theta), 0, 0},
-		{math.Sin(theta), math.Cos(theta), 0, 0},
+		{math.Cos(theta), math.Sin(theta), 0, 0},
+		{-math.Sin(theta), math.Cos(theta), 0, 0},
 		{0, 0, 1, 0},
 		{0, 0, 0, 1},
 	}
@@ -321,7 +321,7 @@ func generateBezierCoefficients(p0, p1, p2, p3 float64) *Matrix {
 // AddBox adds a series of points defining a 3D box to the matrix
 func (m *Matrix) AddBox(x, y, z, width, height, depth float64) {
 	x1 := x + width
-	y1 := y + height
+	y1 := y - height
 	z1 := z - depth
 
 	// Front
