@@ -1,13 +1,11 @@
 package main
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"image/color"
 	"os"
 	"strconv"
-	"strings"
 )
 
 // DrawingMode defines the type of each drawing mode
@@ -22,10 +20,12 @@ const (
 
 // Parser is a script parser
 type Parser struct {
-	frame *Image
-	em    *Matrix
-	tm    *Matrix
-	cs    *Stack
+	frame  *Image
+	em     *Matrix
+	tm     *Matrix
+	cs     *Stack
+	lexer  *Lexer
+	backup []Token
 }
 
 // NewParser returns a new parser
@@ -33,10 +33,11 @@ func NewParser() *Parser {
 	cs := NewStack()
 	cs.Push(IdentityMatrix(4))
 	return &Parser{
-		frame: NewImage(DefaultHeight, DefaultWidth),
-		em:    NewMatrix(4, 0),
-		tm:    IdentityMatrix(4),
-		cs:    cs,
+		frame:  NewImage(DefaultHeight, DefaultWidth),
+		em:     NewMatrix(4, 0),
+		tm:     IdentityMatrix(4),
+		cs:     cs,
+		backup: make([]Token, 0, 10),
 	}
 }
 
@@ -48,125 +49,191 @@ func (p *Parser) ParseFile(filename string) error {
 	}
 	defer f.Close()
 
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		command := strings.TrimSpace(scanner.Text())
-		if len(command) == 0 {
-			continue
-		}
-		if command[0] == '#' {
-			continue
-		}
-		switch command {
-		case "line":
-			argv := getArguments(scanner)
-			err = p.line(argv)
-		case "ident":
-			p.tm = IdentityMatrix(4)
-		case "scale":
-			argv := getArguments(scanner)
-			err = p.scale(argv)
-		case "move":
-			argv := getArguments(scanner)
-			err = p.move(argv)
-		case "rotate":
-			argv := getArguments(scanner)
-			err = p.rotate(argv)
-		case "save":
-			argv := getArguments(scanner)
-			err = p.save(argv)
-		case "display":
-			err = p.display()
-		case "circle":
-			argv := getArguments(scanner)
-			err = p.circle(argv)
-		case "hermite":
-			argv := getArguments(scanner)
-			err = p.hermite(argv)
-		case "bezier":
-			argv := getArguments(scanner)
-			err = p.bezier(argv)
-		case "box":
-			argv := getArguments(scanner)
-			err = p.box(argv)
-		case "clear":
-			p.clear()
-		case "sphere":
-			argv := getArguments(scanner)
-			err = p.sphere(argv)
-		case "torus":
-			argv := getArguments(scanner)
-			err = p.torus(argv)
-		case "push":
-			top := p.cs.Peek()
-			if top != nil {
-				p.cs.Push(top.Copy())
+	p.lexer = NewLexer()
+	p.lexer.Lex(f)
+	for {
+		t := p.next()
+		switch t.tt {
+		case tError:
+			return errors.New(t.value)
+		case tEOF:
+			return nil
+		case tIdent:
+			err := p.parseIdent(t)
+			if err != nil {
+				return err
 			}
-		case "pop":
-			p.cs.Pop()
+		case tComment:
+			continue
 		default:
-			err = fmt.Errorf("unrecognized command: \"%s\"", command)
-		}
-
-		if err != nil {
-			return err
+			return fmt.Errorf("unexpected token %v", t)
 		}
 	}
-
-	if err := scanner.Err(); err != nil {
-		return err
-	}
-	return nil
 }
 
-func getArguments(scanner *bufio.Scanner) []string {
-	scanner.Scan()
-	line := scanner.Text()
-	line = strings.TrimSpace(line)
-	argv := strings.Split(line, " ")
-	return argv
-}
-
-func getNumerical(argv []string) ([]float64, error) {
-	values := make([]float64, len(argv))
-	for i, v := range argv {
-		v, err := strconv.ParseFloat(v, 64)
-		if err != nil {
-			return nil, errors.New("arguments must be numeric")
+func (p *Parser) parseIdent(t Token) error {
+	var err error
+	switch t.value {
+	case "line":
+		x0 := p.nextFloat()
+		y0 := p.nextFloat()
+		z0 := p.nextFloat()
+		x1 := p.nextFloat()
+		y1 := p.nextFloat()
+		z1 := p.nextFloat()
+		err = p.line(x0, y0, z0, x1, y1, z1)
+	case "ident":
+		p.tm = IdentityMatrix(4)
+	case "scale":
+		sx := p.nextFloat()
+		sy := p.nextFloat()
+		sz := p.nextFloat()
+		err = p.scale(sx, sy, sz)
+	case "move":
+		x := p.nextFloat()
+		y := p.nextFloat()
+		z := p.nextFloat()
+		err = p.move(x, y, z)
+	case "rotate":
+		axis := p.nextString()
+		theta := p.nextFloat()
+		err = p.rotate(axis, theta)
+	case "save":
+		filename := p.nextString()
+		err = p.save(filename)
+	case "display":
+		err = p.display()
+	case "circle":
+		cx := p.nextFloat()
+		cy := p.nextFloat()
+		cz := p.nextFloat()
+		radius := p.nextFloat()
+		err = p.circle(cx, cy, cz, radius)
+	case "hermite":
+		x0 := p.nextFloat()
+		y0 := p.nextFloat()
+		x1 := p.nextFloat()
+		y1 := p.nextFloat()
+		dx0 := p.nextFloat()
+		dy0 := p.nextFloat()
+		dx1 := p.nextFloat()
+		dy1 := p.nextFloat()
+		err = p.hermite(x0, y0, x1, y1, dx0, dy0, dx1, dy1)
+	case "bezier":
+		x0 := p.nextFloat()
+		y0 := p.nextFloat()
+		x1 := p.nextFloat()
+		y1 := p.nextFloat()
+		x2 := p.nextFloat()
+		y2 := p.nextFloat()
+		x3 := p.nextFloat()
+		y3 := p.nextFloat()
+		err = p.bezier(x0, y0, x1, y1, x2, y2, x3, y3)
+	case "box":
+		x := p.nextFloat()
+		y := p.nextFloat()
+		z := p.nextFloat()
+		width := p.nextFloat()
+		height := p.nextFloat()
+		depth := p.nextFloat()
+		err = p.box(x, y, z, width, height, depth)
+	case "clear":
+		p.clear()
+	case "sphere":
+		cx := p.nextFloat()
+		cy := p.nextFloat()
+		cz := p.nextFloat()
+		radius := p.nextFloat()
+		err = p.sphere(cx, cy, cz, radius)
+	case "torus":
+		cx := p.nextFloat()
+		cy := p.nextFloat()
+		cz := p.nextFloat()
+		r1 := p.nextFloat()
+		r2 := p.nextFloat()
+		err = p.torus(cx, cy, cz, r1, r2)
+	case "push":
+		top := p.cs.Peek()
+		if top != nil {
+			p.cs.Push(top.Copy())
 		}
-		values[i] = v
+	case "pop":
+		p.cs.Pop()
+	default:
+		err = fmt.Errorf("unrecognized identifier: \"%s\"", t.value)
 	}
-	return values, nil
-}
-
-func (p *Parser) line(argv []string) error {
-	if len(argv) != 6 {
-		return fmt.Errorf("\"line\" expects %d arguments (%d provided)", 6, len(argv))
-	}
-	values, err := getNumerical(argv)
-	if err != nil {
-		return err
-	}
-
-	p.em.AddEdge(values[0], values[1], values[2], values[3], values[4], values[5])
-	err = p.apply(DrawLineMode)
-
 	return err
 }
 
-func (p *Parser) scale(argv []string) error {
-	if len(argv) != 3 {
-		return fmt.Errorf("\"scale\" expects %d arguments (%d provided)", 3, len(argv))
+func (p *Parser) next() Token {
+	lenBackup := len(p.backup)
+	if lenBackup > 0 {
+		token := p.backup[lenBackup-1]
+		p.backup = p.backup[:lenBackup-1]
+		return token
 	}
-	values, err := getNumerical(argv)
+	token := <-p.lexer.out
+	return token
+}
+
+func (p *Parser) nextFloat() float64 {
+	if p.requireNext(tInt) != nil && p.requireNext(tFloat) != nil {
+		panic(fmt.Errorf("%s expected, got %s", tFloat, p.peek().tt))
+	}
+	v, _ := strconv.ParseFloat(p.next().value, 64)
+	return v
+}
+
+func (p *Parser) nextString() string {
+	if p.requireNext(tString) != nil {
+		panic(fmt.Errorf("%s expected, got %s", tString, p.peek().tt))
+	}
+	return p.next().value
+}
+
+func (p *Parser) unread(token Token) {
+	if p.backup == nil {
+		p.backup = make([]Token, 0, 10)
+	}
+	p.backup = append(p.backup, token)
+}
+
+func (p *Parser) peek() Token {
+	token := p.next()
+	p.unread(token)
+	return token
+}
+
+func (p *Parser) requireNext(tt TokenType) error {
+	other := p.peek().tt
+	if other != tt {
+		return fmt.Errorf("unexpected %v; expected %v", other, tt)
+	}
+	return nil
+}
+
+func (p *Parser) line(x0, y0, z0, x1, y1, z1 float64) error {
+	p.em.AddEdge(x0, y0, z0, x1, y1, z1)
+	err := p.apply(DrawLineMode)
+	return err
+}
+
+func (p *Parser) scale(sx, sy, sz float64) error {
+	dilation := MakeDilation(sx, sy, sz)
+
+	top := p.cs.Pop()
+	top, err := dilation.Multiply(top)
 	if err != nil {
 		return err
 	}
+	p.cs.Push(top)
+	return nil
+}
 
-	dilation := MakeDilation(values[0], values[1], values[2])
-
+func (p *Parser) move(x, y, z float64) error {
+	translation := MakeTranslation(x, y, z)
 	top := p.cs.Pop()
-	top, err = dilation.Multiply(top)
+	top, err := translation.Multiply(top)
 	if err != nil {
 		return err
 	}
@@ -175,36 +242,7 @@ func (p *Parser) scale(argv []string) error {
 	return nil
 }
 
-func (p *Parser) move(argv []string) error {
-	if len(argv) != 3 {
-		return fmt.Errorf("\"move\" expects %d arguments (%d provided)", 3, len(argv))
-	}
-	values, err := getNumerical(argv)
-	if err != nil {
-		return err
-	}
-
-	translation := MakeTranslation(values[0], values[1], values[2])
-	top := p.cs.Pop()
-	top, err = translation.Multiply(top)
-	if err != nil {
-		return err
-	}
-	p.cs.Push(top)
-
-	return nil
-}
-
-func (p *Parser) rotate(argv []string) error {
-	if len(argv) != 2 {
-		return fmt.Errorf("\"rotate\" expects %d arguments (%d provided)", 2, len(argv))
-	}
-	axis := strings.ToLower(argv[0])
-	theta, err := strconv.ParseFloat(argv[1], 64)
-	if err != nil {
-		return errors.New("arguments must be numeric")
-	}
-
+func (p *Parser) rotate(axis string, theta float64) error {
 	var rotation *Matrix
 	switch axis {
 	case "x":
@@ -218,7 +256,7 @@ func (p *Parser) rotate(argv []string) error {
 	}
 
 	top := p.cs.Pop()
-	top, err = rotation.Multiply(top)
+	top, err := rotation.Multiply(top)
 	if err != nil {
 		return err
 	}
@@ -249,11 +287,8 @@ func (p *Parser) draw(mode DrawingMode) {
 	}
 }
 
-func (p *Parser) save(argv []string) error {
-	if len(argv) != 1 {
-		return fmt.Errorf("\"save\" expects %d argument (%d provided)", 1, len(argv))
-	}
-	err := p.frame.Save(argv[0])
+func (p *Parser) save(filename string) error {
+	err := p.frame.Save(filename)
 	return err
 }
 
@@ -262,63 +297,28 @@ func (p *Parser) display() error {
 	return err
 }
 
-func (p *Parser) circle(argv []string) error {
-	if len(argv) != 4 {
-		return fmt.Errorf("\"circle\" expects %d arguments (%d provided)", 4, len(argv))
-	}
-	values, err := getNumerical(argv)
-	if err != nil {
-		return err
-	}
+func (p *Parser) circle(cx, cy, cz, radius float64) error {
+	p.em.AddCircle(cx, cy, cz, radius)
+	err := p.apply(DrawLineMode)
+	return err
+}
 
-	p.em.AddCircle(values[0], values[1], values[2], values[3])
-	err = p.apply(DrawLineMode)
+func (p *Parser) hermite(x0, y0, x1, y1, dx0, dy0, dx1, dy1 float64) error {
+	p.em.AddHermite(x0, y0, x1, y1, dx0, dy0, dx1, dy1)
+	err := p.apply(DrawLineMode)
 
 	return err
 }
 
-func (p *Parser) hermite(argv []string) error {
-	if len(argv) != 8 {
-		return fmt.Errorf("\"hermite\" expects %d arguments (%d provided)", 8, len(argv))
-	}
-	values, err := getNumerical(argv)
-	if err != nil {
-		return err
-	}
-
-	p.em.AddHermite(values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7])
-	err = p.apply(DrawLineMode)
-
+func (p *Parser) bezier(x0, y0, x1, y1, x2, y2, x3, y3 float64) error {
+	p.em.AddBezier(x0, y0, x1, y1, x2, y2, x3, y3)
+	err := p.apply(DrawLineMode)
 	return err
 }
 
-func (p *Parser) bezier(argv []string) error {
-	if len(argv) != 8 {
-		return fmt.Errorf("\"bezier\" expects %d arguments (%d provided)", 8, len(argv))
-	}
-	values, err := getNumerical(argv)
-	if err != nil {
-		return err
-	}
-
-	p.em.AddBezier(values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7])
-	err = p.apply(DrawLineMode)
-
-	return err
-}
-
-func (p *Parser) box(argv []string) error {
-	if len(argv) != 6 {
-		return fmt.Errorf("\"box\" expects %d arguments (%d provided)", 6, len(argv))
-	}
-	values, err := getNumerical(argv)
-	if err != nil {
-		return err
-	}
-
-	p.em.AddBox(values[0], values[1], values[2], values[3], values[4], values[5])
-	err = p.apply(DrawPolygonMode)
-
+func (p *Parser) box(x, y, z, width, height, depth float64) error {
+	p.em.AddBox(x, y, z, width, height, depth)
+	err := p.apply(DrawPolygonMode)
 	return err
 }
 
@@ -326,32 +326,15 @@ func (p *Parser) clear() {
 	p.em = NewMatrix(4, 0)
 }
 
-func (p *Parser) sphere(argv []string) error {
-	if len(argv) != 4 {
-		return fmt.Errorf("\"box\" expects %d arguments (%d provided)", 4, len(argv))
-	}
-	values, err := getNumerical(argv)
-	if err != nil {
-		return err
-	}
-
-	p.em.AddSphere(values[0], values[1], values[2], values[3])
-	err = p.apply(DrawPolygonMode)
-
+func (p *Parser) sphere(cx, cy, cz, radius float64) error {
+	p.em.AddSphere(cx, cy, cz, radius)
+	err := p.apply(DrawPolygonMode)
 	return err
 }
 
-func (p *Parser) torus(argv []string) error {
-	if len(argv) != 5 {
-		return fmt.Errorf("\"box\" expects %d arguments (%d provided)", 5, len(argv))
-	}
-	values, err := getNumerical(argv)
-	if err != nil {
-		return err
-	}
-
-	p.em.AddTorus(values[0], values[1], values[2], values[3], values[4])
-	err = p.apply(DrawPolygonMode)
+func (p *Parser) torus(cx, cy, cz, r1, r2 float64) error {
+	p.em.AddTorus(cx, cy, cz, r1, r2)
+	err := p.apply(DrawPolygonMode)
 
 	return err
 }
