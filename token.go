@@ -2,21 +2,23 @@ package main
 
 import "fmt"
 
+// TokenType is used for representing different tokens
 type TokenType int
 
 const (
-	tEOF TokenType = iota
-	tError
-	tComment
-	tInt
-	tFloat
-	tIdent
-	tString
+	tEOF     TokenType = iota // end of file
+	tError                    // error has occurred
+	tComment                  // comment
+	tInt                      // integer
+	tFloat                    // floating point
+	tIdent                    // identifier
+	tString                   // string
 )
 
+// Token is a lexical token
 type Token struct {
-	tt    TokenType
-	value string
+	tt    TokenType // type of token
+	value string    // value of token
 }
 
 func (tt TokenType) String() string {
