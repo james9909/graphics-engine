@@ -20,18 +20,18 @@ const (
 
 // Parser is a script parser
 type Parser struct {
-	frame  *Image
-	em     *Matrix
-	tm     *Matrix
-	cs     *Stack
-	lexer  *Lexer
-	backup []Token
+	frame  *Image  // current image
+	em     *Matrix // underlying edge/polygon matrix
+	tm     *Matrix // transformation matrix
+	cs     *Stack  // relative coordinate system stack
+	lexer  *Lexer  // lexer
+	backup []Token // token backup
 }
 
 // NewParser returns a new parser
 func NewParser() *Parser {
 	cs := NewStack()
-	cs.Push(IdentityMatrix(4))
+	cs.Push(IdentityMatrix(4)) // stack should begin with the identity matrix
 	return &Parser{
 		frame:  NewImage(DefaultHeight, DefaultWidth),
 		em:     NewMatrix(4, 0),
@@ -69,6 +69,7 @@ func (p *Parser) ParseFile(filename string) error {
 	}
 }
 
+// parseIdent parses an identifier token
 func (p *Parser) parseIdent(t Token) error {
 	var err error
 	switch t.value {
@@ -163,20 +164,25 @@ func (p *Parser) parseIdent(t Token) error {
 	return err
 }
 
+// next returns the next token from the lexer
 func (p *Parser) next() Token {
 	lenBackup := len(p.backup)
+	// Use the token from backup if it exists
 	if lenBackup > 0 {
 		token := p.backup[lenBackup-1]
 		p.backup = p.backup[:lenBackup-1]
 		return token
 	}
 	token := <-p.lexer.out
+	// Skip comments
 	for token.tt == tComment {
 		token = <-p.lexer.out
 	}
 	return token
 }
 
+// nextFloat returns the next token from the lexer as a float.
+// Panics if the next token is not a float or integer
 func (p *Parser) nextFloat() float64 {
 	if p.requireNext(tInt) != nil && p.requireNext(tFloat) != nil {
 		panic(fmt.Errorf("expected %v, got %v", tFloat, p.peek().tt))
@@ -185,6 +191,8 @@ func (p *Parser) nextFloat() float64 {
 	return v
 }
 
+// nextString returns the next token from the lexer.
+// Panics if the next token is not a string
 func (p *Parser) nextString() string {
 	if p.requireNext(tString) != nil {
 		panic(fmt.Errorf("expected %v, got %v", tString, p.peek().tt))
@@ -192,6 +200,8 @@ func (p *Parser) nextString() string {
 	return p.next().value
 }
 
+// unread adds the token to the list of backup tokens.
+// Since channels cannot be "unread", we use a list to backup these tokens
 func (p *Parser) unread(token Token) {
 	if p.backup == nil {
 		p.backup = make([]Token, 0, 10)
@@ -199,12 +209,14 @@ func (p *Parser) unread(token Token) {
 	p.backup = append(p.backup, token)
 }
 
+// peek returns the next token without consuming it
 func (p *Parser) peek() Token {
 	token := p.next()
 	p.unread(token)
 	return token
 }
 
+// requireNext returns an error if the next token is not a certain type
 func (p *Parser) requireNext(tt TokenType) error {
 	other := p.peek().tt
 	if other != tt {
@@ -239,7 +251,6 @@ func (p *Parser) move(x, y, z float64) error {
 		return err
 	}
 	p.cs.Push(top)
-
 	return nil
 }
 
@@ -262,7 +273,6 @@ func (p *Parser) rotate(axis string, theta float64) error {
 		return err
 	}
 	p.cs.Push(top)
-
 	return nil
 }
 
@@ -274,7 +284,6 @@ func (p *Parser) apply(mode DrawingMode) error {
 	p.em = product
 	p.draw(mode)
 	p.clear()
-
 	return nil
 }
 
@@ -307,7 +316,6 @@ func (p *Parser) circle(cx, cy, cz, radius float64) error {
 func (p *Parser) hermite(x0, y0, x1, y1, dx0, dy0, dx1, dy1 float64) error {
 	p.em.AddHermite(x0, y0, x1, y1, dx0, dy0, dx1, dy1)
 	err := p.apply(DrawLineMode)
-
 	return err
 }
 
@@ -336,6 +344,5 @@ func (p *Parser) sphere(cx, cy, cz, radius float64) error {
 func (p *Parser) torus(cx, cy, cz, r1, r2 float64) error {
 	p.em.AddTorus(cx, cy, cz, r1, r2)
 	err := p.apply(DrawPolygonMode)
-
 	return err
 }
