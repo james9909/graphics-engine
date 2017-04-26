@@ -227,8 +227,8 @@ func (m *Matrix) AddEdge(x0, y0, z0, x1, y1, z1 float64) {
 	m.AddPoint(x1, y1, z1)
 }
 
-// AddPolygon adds three points to the matrix
-func (m *Matrix) AddPolygon(x0, y0, z0, x1, y1, z1, x2, y2, z2 float64) {
+// AddTriangle adds three points to the matrix
+func (m *Matrix) AddTriangle(x0, y0, z0, x1, y1, z1, x2, y2, z2 float64) {
 	m.AddPoint(x0, y0, z0)
 	m.AddPoint(x1, y1, z1)
 	m.AddPoint(x2, y2, z2)
@@ -325,23 +325,23 @@ func (m *Matrix) AddBox(x, y, z, width, height, depth float64) {
 	z1 := z - depth
 
 	// Front
-	m.AddPolygon(x, y1, z, x, y, z, x1, y, z)
-	m.AddPolygon(x, y1, z, x1, y, z, x1, y1, z)
+	m.AddTriangle(x, y1, z, x, y, z, x1, y, z)
+	m.AddTriangle(x, y1, z, x1, y, z, x1, y1, z)
 	// Back
-	m.AddPolygon(x1, y1, z1, x1, y, z1, x, y, z1)
-	m.AddPolygon(x1, y1, z1, x, y, z1, x, y1, z1)
+	m.AddTriangle(x1, y1, z1, x1, y, z1, x, y, z1)
+	m.AddTriangle(x1, y1, z1, x, y, z1, x, y1, z1)
 	// Top
-	m.AddPolygon(x, y1, z1, x, y1, z, x1, y1, z)
-	m.AddPolygon(x, y1, z1, x1, y1, z, x1, y1, z1)
+	m.AddTriangle(x, y1, z1, x, y1, z, x1, y1, z)
+	m.AddTriangle(x, y1, z1, x1, y1, z, x1, y1, z1)
 	// Bottom
-	m.AddPolygon(x1, y, z1, x1, y, z, x, y, z)
-	m.AddPolygon(x1, y, z1, x, y, z, x, y, z1)
+	m.AddTriangle(x1, y, z1, x1, y, z, x, y, z)
+	m.AddTriangle(x1, y, z1, x, y, z, x, y, z1)
 	// Left
-	m.AddPolygon(x, y1, z1, x, y, z1, x, y, z)
-	m.AddPolygon(x, y1, z1, x, y, z, x, y1, z)
+	m.AddTriangle(x, y1, z1, x, y, z1, x, y, z)
+	m.AddTriangle(x, y1, z1, x, y, z, x, y1, z)
 	// Right
-	m.AddPolygon(x1, y1, z, x1, y, z, x1, y, z1)
-	m.AddPolygon(x1, y1, z, x1, y, z1, x1, y1, z1)
+	m.AddTriangle(x1, y1, z, x1, y, z, x1, y, z1)
+	m.AddTriangle(x1, y1, z, x1, y, z1, x1, y1, z1)
 }
 
 // AddSphere adds a series of points defining a 3D sphere to the matrix
@@ -358,14 +358,14 @@ func (m *Matrix) AddSphere(cx, cy, cz, radius float64) {
 			index := latitudeStart + longitude
 			indexNextLatitude := nextLatitudeStart + longitude
 			if longitude > 0 {
-				m.AddPolygon(
+				m.AddTriangle(
 					points.Get(0, index), points.Get(1, index), points.Get(2, index),
 					points.Get(0, index+1), points.Get(1, index+1), points.Get(2, index+1),
 					points.Get(0, indexNextLatitude), points.Get(1, indexNextLatitude), points.Get(2, indexNextLatitude))
 			}
 			// Don't draw the triangles at the end pole of the sphere
 			if longitude < endLongitude-1 {
-				m.AddPolygon(
+				m.AddTriangle(
 					points.Get(0, index+1), points.Get(1, index+1), points.Get(2, index+1),
 					points.Get(0, indexNextLatitude+1), points.Get(1, indexNextLatitude+1), points.Get(2, indexNextLatitude+1),
 					points.Get(0, indexNextLatitude), points.Get(1, indexNextLatitude), points.Get(2, indexNextLatitude))
@@ -402,11 +402,11 @@ func (m *Matrix) AddTorus(cx, cy, cz, r1, r2 float64) {
 	for latitude := 0; latitude < endLatitude; latitude++ {
 		for longitude := 0; longitude < endLongitude; longitude++ {
 			index := latitude*steps + longitude
-			m.AddPolygon(
+			m.AddTriangle(
 				points.Get(0, index), points.Get(1, index), points.Get(2, index),
 				points.Get(0, index+1), points.Get(1, index+1), points.Get(2, index+1),
 				points.Get(0, index+steps), points.Get(1, index+steps), points.Get(2, index+steps))
-			m.AddPolygon(
+			m.AddTriangle(
 				points.Get(0, index+steps+1), points.Get(1, index+steps+1), points.Get(2, index+steps+1),
 				points.Get(0, index+steps), points.Get(1, index+steps), points.Get(2, index+steps),
 				points.Get(0, index+1), points.Get(1, index+1), points.Get(2, index+1))
