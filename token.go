@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
 // TokenType is used for representing different tokens
 type TokenType int
@@ -13,7 +16,64 @@ const (
 	tFloat                    // floating point
 	tIdent                    // identifier
 	tString                   // string
+	tIllegal
+
+	keywordBeginning
+	LINE
+	IDENT
+	SCALE
+	MOVE
+	ROTATE
+	SAVE
+	DISPLAY
+	CIRCLE
+	HERMITE
+	BEZIER
+	BOX
+	CLEAR
+	SPHERE
+	TORUS
+	PUSH
+	POP
+	keywordEnd
 )
+
+var tokens = map[TokenType]string{
+	tEOF:     "EOF",
+	tError:   "ERROR",
+	tComment: "COMMENT",
+	tInt:     "INT",
+	tFloat:   "FLOAT",
+	tIdent:   "IDENTIFIER",
+	tString:  "STRING",
+	tIllegal: "ILLEGAL",
+
+	LINE:    "line",
+	IDENT:   "ident",
+	SCALE:   "scale",
+	MOVE:    "move",
+	ROTATE:  "rotate",
+	SAVE:    "save",
+	DISPLAY: "display",
+	CIRCLE:  "circle",
+	HERMITE: "hermite",
+	BEZIER:  "bezier",
+	BOX:     "box",
+	CLEAR:   "clear",
+	SPHERE:  "sphere",
+	TORUS:   "torus",
+	PUSH:    "push",
+	POP:     "pop",
+}
+
+var keywords map[string]TokenType
+
+func init() {
+	keywords = make(map[string]TokenType)
+	for i := keywordBeginning; i < keywordEnd; i++ {
+		keywords[tokens[i]] = i
+	}
+}
 
 // Token is a lexical token
 type Token struct {
@@ -22,26 +82,20 @@ type Token struct {
 }
 
 func (tt TokenType) String() string {
-	switch tt {
-	case tEOF:
-		return "EOF"
-	case tError:
-		return "ERROR"
-	case tComment:
-		return "COMMENT"
-	case tInt:
-		return "INT"
-	case tFloat:
-		return "FLOAT"
-	case tIdent:
-		return "IDENT"
-	case tString:
-		return "STRING"
-	default:
-		panic(fmt.Errorf("invalid token type"))
+	if s, isToken := tokens[tt]; isToken {
+		return s
 	}
+	return "token(" + strconv.Itoa(int(tt)) + ")"
 }
 
 func (t Token) String() string {
 	return fmt.Sprintf("{%s %s}", t.tt, t.value)
+}
+
+// Lookup returns the corresponding token type for an identifier
+func Lookup(ident string) TokenType {
+	if tok, isKeyword := keywords[ident]; isKeyword {
+		return tok
+	}
+	return tIllegal
 }

@@ -21,24 +21,6 @@ type Lexer struct {
 }
 
 var eof = rune(0)
-var commands = []string{
-	"push",
-	"pop",
-	"move",
-	"translate",
-	"rotate",
-	"scale",
-	"box",
-	"sphere",
-	"torus",
-	"line",
-	"curve",
-	"circle",
-	"save",
-	"display",
-	"ident",
-	"clear",
-}
 
 // NewLexer returns a new lexer
 func NewLexer() *Lexer {
@@ -199,20 +181,11 @@ func lexString(l *Lexer) stateFn {
 		r = l.next()
 	}
 	l.unread()
-	if isIdent(string(l.buf)) {
-		l.emit(tIdent)
-	} else {
+	if Lookup(string(l.buf)) == tIllegal {
+		// Not a legal identifier, so treat it as a string
 		l.emit(tString)
+	} else {
+		l.emit(tIdent)
 	}
 	return lexRoot
-}
-
-// isIdent returns true if a string is an identifier, false otherwise
-func isIdent(s string) bool {
-	for i := 0; i < len(commands); i++ {
-		if commands[i] == s {
-			return true
-		}
-	}
-	return false
 }

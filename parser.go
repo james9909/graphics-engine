@@ -72,8 +72,8 @@ func (p *Parser) ParseFile(filename string) error {
 // parseIdent parses an identifier token
 func (p *Parser) parseIdent(t Token) error {
 	var err error
-	switch t.value {
-	case "line":
+	switch Lookup(t.value) {
+	case LINE:
 		x0 := p.nextFloat()
 		y0 := p.nextFloat()
 		z0 := p.nextFloat()
@@ -81,34 +81,34 @@ func (p *Parser) parseIdent(t Token) error {
 		y1 := p.nextFloat()
 		z1 := p.nextFloat()
 		err = p.line(x0, y0, z0, x1, y1, z1)
-	case "ident":
+	case IDENT:
 		p.tm = IdentityMatrix(4)
-	case "scale":
+	case SCALE:
 		sx := p.nextFloat()
 		sy := p.nextFloat()
 		sz := p.nextFloat()
 		err = p.scale(sx, sy, sz)
-	case "move":
+	case MOVE:
 		x := p.nextFloat()
 		y := p.nextFloat()
 		z := p.nextFloat()
 		err = p.move(x, y, z)
-	case "rotate":
+	case ROTATE:
 		axis := p.nextString()
 		theta := p.nextFloat()
 		err = p.rotate(axis, theta)
-	case "save":
+	case SAVE:
 		filename := p.nextString()
 		err = p.save(filename)
-	case "display":
+	case DISPLAY:
 		err = p.display()
-	case "circle":
+	case CIRCLE:
 		cx := p.nextFloat()
 		cy := p.nextFloat()
 		cz := p.nextFloat()
 		radius := p.nextFloat()
 		err = p.circle(cx, cy, cz, radius)
-	case "hermite":
+	case HERMITE:
 		x0 := p.nextFloat()
 		y0 := p.nextFloat()
 		x1 := p.nextFloat()
@@ -118,7 +118,7 @@ func (p *Parser) parseIdent(t Token) error {
 		dx1 := p.nextFloat()
 		dy1 := p.nextFloat()
 		err = p.hermite(x0, y0, x1, y1, dx0, dy0, dx1, dy1)
-	case "bezier":
+	case BEZIER:
 		x0 := p.nextFloat()
 		y0 := p.nextFloat()
 		x1 := p.nextFloat()
@@ -128,7 +128,7 @@ func (p *Parser) parseIdent(t Token) error {
 		x3 := p.nextFloat()
 		y3 := p.nextFloat()
 		err = p.bezier(x0, y0, x1, y1, x2, y2, x3, y3)
-	case "box":
+	case BOX:
 		x := p.nextFloat()
 		y := p.nextFloat()
 		z := p.nextFloat()
@@ -136,29 +136,29 @@ func (p *Parser) parseIdent(t Token) error {
 		height := p.nextFloat()
 		depth := p.nextFloat()
 		err = p.box(x, y, z, width, height, depth)
-	case "clear":
+	case CLEAR:
 		p.clear()
-	case "sphere":
+	case SPHERE:
 		cx := p.nextFloat()
 		cy := p.nextFloat()
 		cz := p.nextFloat()
 		radius := p.nextFloat()
 		err = p.sphere(cx, cy, cz, radius)
-	case "torus":
+	case TORUS:
 		cx := p.nextFloat()
 		cy := p.nextFloat()
 		cz := p.nextFloat()
 		r1 := p.nextFloat()
 		r2 := p.nextFloat()
 		err = p.torus(cx, cy, cz, r1, r2)
-	case "push":
+	case PUSH:
 		top := p.cs.Peek()
 		if top != nil {
 			p.cs.Push(top.Copy())
 		}
-	case "pop":
+	case POP:
 		p.cs.Pop()
-	default:
+	case tIllegal:
 		err = fmt.Errorf("unrecognized identifier: \"%s\"", t.value)
 	}
 	return err
