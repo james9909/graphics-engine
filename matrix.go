@@ -284,7 +284,7 @@ func generateHermiteCoefficients(p0, m0, p1, m1 float64) *Matrix {
 }
 
 // AddBezier adds a series of points defining a bezier curve to the matrix
-func (m *Matrix) AddBezier(x0, y0, x1, y1, x2, y2, x3, y3 float64) error {
+func (m *Matrix) AddBezier(x0, y0, x1, y1, x2, y2, x3, y3 float64) {
 	coefficientsX := generateBezierCoefficients(x0, x1, x2, x3)
 	coefficientsY := generateBezierCoefficients(y0, y1, y2, y3)
 	aX, bX, cX, dX := coefficientsX.Get(0, 0), coefficientsX.Get(1, 0), coefficientsX.Get(2, 0), coefficientsX.Get(3, 0)
@@ -298,7 +298,6 @@ func (m *Matrix) AddBezier(x0, y0, x1, y1, x2, y2, x3, y3 float64) error {
 		x0 = x1
 		y0 = y1
 	}
-	return nil
 }
 
 func generateBezierCoefficients(p0, p1, p2, p3 float64) *Matrix {
