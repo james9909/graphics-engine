@@ -102,8 +102,7 @@ func (l *Lexer) peek() rune {
 // run lexes the input and executes all state functions
 func (l *Lexer) run() {
 	defer close(l.tokens)
-	for l.state != nil {
-		l.state = l.state(l)
+	for l.state = lexRoot; l.state != nil; l.state = l.state(l) {
 	}
 }
 
