@@ -121,15 +121,15 @@ func lexRoot(l *Lexer) stateFn {
 		l.keep(r)
 		return lexString
 	default:
-		return l.errorf("line %d: unexpected rune '%c'", l.line, r)
+		return l.error(fmt.Sprintf("unexpected rune '%c'", r))
 	}
 }
 
-// errorf emits a lex error
-func (l *Lexer) errorf(format string, args ...interface{}) stateFn {
+// error emits a lex error
+func (l *Lexer) error(s string) stateFn {
 	l.out <- Token{
 		tt:    tError,
-		value: fmt.Sprintf(format, args...),
+		value: fmt.Sprintf("%d: syntax error: %s", l.line, s),
 	}
 	return nil
 }
@@ -163,7 +163,7 @@ func lexNumber(l *Lexer) stateFn {
 	next := l.peek()
 	// The next character must be numeric
 	if unicode.IsLetter(next) {
-		l.errorf("line %d: invalid number", l.line)
+		l.error("invalid number")
 		return lexString
 	}
 	if strings.ContainsRune(string(l.buf), '.') {
