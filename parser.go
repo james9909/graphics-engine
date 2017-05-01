@@ -1,13 +1,11 @@
 package main
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"image/color"
-	"os"
+	"io/ioutil"
 	"strconv"
-	"strings"
 )
 
 // DrawingMode defines the type of each drawing mode
@@ -45,23 +43,18 @@ func NewParser() *Parser {
 
 // ParseFile parses a file for commands and executes them
 func (p *Parser) ParseFile(filename string) error {
-	f, err := os.Open(filename)
+	input, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return err
 	}
-	defer f.Close()
-
-	p.lexer = NewLexer()
-	p.lexer.Lex(f)
-	err = p.parse()
+	err = p.ParseString(string(input))
 	return err
 }
 
 // ParseString parses a string for commands and executes them
 func (p *Parser) ParseString(input string) error {
 	p.lexer = NewLexer()
-	reader := bufio.NewReader(strings.NewReader(input))
-	p.lexer.Lex(reader)
+	p.lexer.Lex(input)
 	err := p.parse()
 	return err
 }
@@ -189,10 +182,10 @@ func (p *Parser) next() Token {
 		p.backup = p.backup[:lenBackup-1]
 		return token
 	}
-	token := <-p.lexer.out
+	token := <-p.lexer.tokens
 	// Skip comments
 	for token.tt == tComment {
-		token = <-p.lexer.out
+		token = <-p.lexer.tokens
 	}
 	if token.tt == tError {
 		panic(token.value)
@@ -203,7 +196,7 @@ func (p *Parser) next() Token {
 // nextFloat returns the next token from the lexer as a float.
 // Panics if the next token is not a float or integer
 func (p *Parser) nextFloat() float64 {
-	if p.requireNext(tInt) != nil && p.requireNext(tFloat) != nil {
+	if p.expect(tInt) != nil && p.expect(tFloat) != nil {
 		panic(fmt.Errorf("expected %v, got %v", tFloat, p.peek().tt))
 	}
 	v, _ := strconv.ParseFloat(p.next().value, 64)
@@ -213,7 +206,7 @@ func (p *Parser) nextFloat() float64 {
 // nextString returns the next token from the lexer.
 // Panics if the next token is not a string
 func (p *Parser) nextString() string {
-	if p.requireNext(tString) != nil {
+	if p.expect(tString) != nil {
 		panic(fmt.Errorf("expected %v, got %v", tString, p.peek().tt))
 	}
 	return p.next().value
@@ -235,8 +228,8 @@ func (p *Parser) peek() Token {
 	return token
 }
 
-// requireNext returns an error if the next token is not a certain type
-func (p *Parser) requireNext(tt TokenType) error {
+// expect returns an error if the next token is not a certain type
+func (p *Parser) expect(tt TokenType) error {
 	other := p.peek().tt
 	if other != tt {
 		return fmt.Errorf("expected %v, got %v", tt, other)

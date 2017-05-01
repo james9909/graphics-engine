@@ -1,11 +1,10 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"io"
 	"strings"
 	"unicode"
+	"unicode/utf8"
 )
 
 // stateFn is a state function executes an action and returns the next state
@@ -13,11 +12,14 @@ type stateFn func(*Lexer) stateFn
 
 // Lexer is a struct that will lex a script for tokens
 type Lexer struct {
-	in    *bufio.Reader // input stream
-	out   chan Token    // channel of tokens
-	buf   []rune        // value of the current token
-	state stateFn       // current state function
-	line  int           // current line
+	input  string     // input string
+	length int        // length of input string
+	tokens chan Token // channel of tokens
+	state  stateFn    // current state function
+	pos    int        // lexer's current position in the input
+	start  int        // starting position of the current item
+	line   int        // current line
+	width  int        // width of the last rune
 }
 
 var eof = rune(0)
@@ -25,15 +27,15 @@ var eof = rune(0)
 // NewLexer returns a new lexer
 func NewLexer() *Lexer {
 	return &Lexer{
-		out:   make(chan Token),
-		buf:   make([]rune, 0, 10),
-		state: lexRoot,
+		tokens: make(chan Token),
+		state:  lexRoot,
 	}
 }
 
 // Lex lexes an io.Reader for tokens
-func (l *Lexer) Lex(r io.Reader) {
-	l.in = bufio.NewReader(r)
+func (l *Lexer) Lex(input string) {
+	l.input = input
+	l.length = len(input)
 	go l.run()
 }
 
@@ -41,7 +43,6 @@ func (l *Lexer) Lex(r io.Reader) {
 func (l *Lexer) accept(s string) bool {
 	r := l.next()
 	if strings.IndexRune(s, r) >= 0 {
-		l.keep(r)
 		return true
 	}
 	l.unread()
@@ -56,25 +57,39 @@ func (l *Lexer) acceptRun(s string) {
 
 // emit passes the current token into the token channel
 func (l *Lexer) emit(tt TokenType) {
-	l.out <- Token{
+	l.tokens <- Token{
 		tt:    tt,
-		value: string(l.buf),
+		value: l.input[l.start:l.pos],
 	}
-	l.buf = l.buf[0:0]
+	l.start = l.pos
+}
+
+// ignore passes over the current token
+func (l *Lexer) ignore() {
+	l.start = l.pos
 }
 
 // next consumes and returns the next rune
 func (l *Lexer) next() rune {
-	r, _, err := l.in.ReadRune()
-	if err != nil {
+	if l.pos >= l.length {
+		l.width = 0
 		return eof
+	}
+	r, w := utf8.DecodeRuneInString(l.input[l.pos:])
+	l.width = w
+	l.pos += w
+	if r == '\n' {
+		l.line++
 	}
 	return r
 }
 
 // unread steps back one rune
 func (l *Lexer) unread() {
-	l.in.UnreadRune()
+	l.pos -= l.width
+	if l.width == 1 && l.input[l.pos] == '\n' {
+		l.line--
+	}
 }
 
 // peek returns the next rune without consuming it
@@ -84,17 +99,9 @@ func (l *Lexer) peek() rune {
 	return r
 }
 
-// keep adds the given rune into the buffer
-func (l *Lexer) keep(r rune) {
-	if l.buf == nil {
-		l.buf = make([]rune, 0, 10)
-	}
-	l.buf = append(l.buf, r)
-}
-
 // run lexes the input and executes all state functions
 func (l *Lexer) run() {
-	defer close(l.out)
+	defer close(l.tokens)
 	for l.state != nil {
 		l.state = l.state(l)
 	}
@@ -110,15 +117,15 @@ func lexRoot(l *Lexer) stateFn {
 	case r == '#':
 		return lexComment
 	case r == '\n' || r == '\r':
-		l.line++
+		l.ignore()
 		return lexRoot
 	case r == ' ' || r == '\t':
+		l.ignore()
 		return lexRoot
 	case strings.IndexRune(".+-0123456789", r) >= 0:
 		l.unread()
 		return lexNumber
 	case unicode.IsPrint(r):
-		l.keep(r)
 		return lexString
 	default:
 		return l.error(fmt.Sprintf("unexpected rune '%c'", r))
@@ -127,7 +134,7 @@ func lexRoot(l *Lexer) stateFn {
 
 // error emits a lex error
 func (l *Lexer) error(s string) stateFn {
-	l.out <- Token{
+	l.tokens <- Token{
 		tt:    tError,
 		value: fmt.Sprintf("%d: syntax error: %s", l.line, s),
 	}
@@ -139,13 +146,12 @@ func lexComment(l *Lexer) stateFn {
 	r := l.next()
 	switch r {
 	case '\n':
-		l.emit(tComment)
+		l.ignore()
 		return lexRoot
 	case eof:
-		l.emit(tComment)
+		l.ignore()
 		return nil
 	default:
-		l.keep(r)
 		return lexComment
 	}
 }
@@ -166,7 +172,7 @@ func lexNumber(l *Lexer) stateFn {
 		l.error("invalid number")
 		return lexString
 	}
-	if strings.ContainsRune(string(l.buf), '.') {
+	if strings.ContainsRune(l.input[l.start:l.pos], '.') {
 		l.emit(tFloat)
 	} else {
 		l.emit(tInt)
@@ -178,11 +184,10 @@ func lexNumber(l *Lexer) stateFn {
 func lexString(l *Lexer) stateFn {
 	r := l.next()
 	for unicode.IsPrint(r) && !unicode.IsSpace(r) {
-		l.keep(r)
 		r = l.next()
 	}
 	l.unread()
-	if Lookup(string(l.buf)) == tIllegal {
+	if Lookup(l.input[l.start:l.pos]) == tIllegal {
 		// Not a legal identifier, so treat it as a string
 		l.emit(tString)
 	} else {
