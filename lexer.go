@@ -129,7 +129,7 @@ func lexRoot(l *Lexer) stateFn {
 func (l *Lexer) errorf(format string, args ...interface{}) stateFn {
 	l.out <- Token{
 		tt:    tError,
-		value: fmt.Sprintf(format, args),
+		value: fmt.Sprintf(format, args...),
 	}
 	return nil
 }
@@ -161,8 +161,9 @@ func lexNumber(l *Lexer) stateFn {
 		l.acceptRun("0123456789")
 	}
 	next := l.peek()
-	// if the next character is not numeric, then treat it as a string
+	// The next character must be numeric
 	if unicode.IsLetter(next) {
+		l.errorf("line %d: invalid number", l.line)
 		return lexString
 	}
 	if strings.ContainsRune(string(l.buf), '.') {
