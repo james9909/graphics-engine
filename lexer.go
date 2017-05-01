@@ -169,8 +169,7 @@ func lexNumber(l *Lexer) stateFn {
 	next := l.peek()
 	// The next character must be numeric
 	if unicode.IsLetter(next) {
-		l.error("invalid number")
-		return lexString
+		return l.error("invalid number")
 	}
 	if strings.ContainsRune(l.input[l.start:l.pos], '.') {
 		l.emit(tFloat)

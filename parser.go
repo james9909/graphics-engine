@@ -183,10 +183,6 @@ func (p *Parser) next() Token {
 		return token
 	}
 	token := <-p.lexer.tokens
-	// Skip comments
-	for token.tt == tComment {
-		token = <-p.lexer.tokens
-	}
 	if token.tt == tError {
 		panic(token.value)
 	}
