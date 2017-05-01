@@ -114,7 +114,7 @@ func lexRoot(l *Lexer) stateFn {
 		return lexRoot
 	case r == ' ' || r == '\t':
 		return lexRoot
-	case strings.IndexRune("+-0123456789", r) >= 0:
+	case strings.IndexRune(".+-0123456789", r) >= 0:
 		l.unread()
 		return lexNumber
 	case unicode.IsPrint(r):
