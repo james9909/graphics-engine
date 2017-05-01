@@ -39,6 +39,13 @@ func (l *Lexer) Lex(input string) {
 	go l.run()
 }
 
+// NextToken returns the next token from the input
+// Called by the parser
+func (l *Lexer) NextToken() Token {
+	token := <-l.tokens
+	return token
+}
+
 // accept consumes a rune if it is in the valid charset
 func (l *Lexer) accept(s string) bool {
 	r := l.next()

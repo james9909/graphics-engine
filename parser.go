@@ -182,7 +182,7 @@ func (p *Parser) next() Token {
 		p.backup = p.backup[:lenBackup-1]
 		return token
 	}
-	token := <-p.lexer.tokens
+	token := p.lexer.NextToken()
 	if token.tt == tError {
 		panic(token.value)
 	}
