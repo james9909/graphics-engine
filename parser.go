@@ -53,8 +53,7 @@ func (p *Parser) ParseFile(filename string) error {
 
 // ParseString parses a string for commands and executes them
 func (p *Parser) ParseString(input string) error {
-	p.lexer = NewLexer()
-	p.lexer.Lex(input)
+	p.lexer = Lex(input)
 	err := p.parse()
 	return err
 }

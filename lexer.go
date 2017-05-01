@@ -24,19 +24,15 @@ type Lexer struct {
 
 var eof = rune(0)
 
-// NewLexer returns a new lexer
-func NewLexer() *Lexer {
-	return &Lexer{
+// Lex lexes a string for tokens
+func Lex(input string) (l *Lexer) {
+	lexer := &Lexer{
 		tokens: make(chan Token),
-		state:  lexRoot,
+		input:  input,
+		length: len(input),
 	}
-}
-
-// Lex lexes an io.Reader for tokens
-func (l *Lexer) Lex(input string) {
-	l.input = input
-	l.length = len(input)
-	go l.run()
+	go lexer.run()
+	return lexer
 }
 
 // NextToken returns the next token from the input
