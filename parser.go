@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"image/color"
 	"os"
 	"strconv"
+	"strings"
 )
 
 // DrawingMode defines the type of each drawing mode
@@ -51,6 +53,20 @@ func (p *Parser) ParseFile(filename string) error {
 
 	p.lexer = NewLexer()
 	p.lexer.Lex(f)
+	err = p.parse()
+	return err
+}
+
+// ParseString parses a string for commands and executes them
+func (p *Parser) ParseString(input string) error {
+	p.lexer = NewLexer()
+	reader := bufio.NewReader(strings.NewReader(input))
+	p.lexer.Lex(reader)
+	err := p.parse()
+	return err
+}
+
+func (p *Parser) parse() error {
 	for {
 		t := p.next()
 		switch t.tt {
