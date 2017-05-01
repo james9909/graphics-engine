@@ -139,10 +139,8 @@ func lexComment(l *Lexer) stateFn {
 	r := l.next()
 	switch r {
 	case '\n':
-		l.emit(tComment)
 		return lexRoot
 	case eof:
-		l.emit(tComment)
 		return nil
 	default:
 		l.keep(r)
