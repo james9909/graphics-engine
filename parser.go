@@ -100,7 +100,7 @@ func (p *Parser) parseIdent(t Token) error {
 		z := p.nextFloat()
 		err = p.move(x, y, z)
 	case ROTATE:
-		axis := p.nextString()
+		axis := p.nextIdent()
 		theta := p.nextFloat()
 		err = p.rotate(axis, theta)
 	case SAVE:
@@ -201,6 +201,15 @@ func (p *Parser) nextFloat() float64 {
 func (p *Parser) nextString() string {
 	if p.expect(tString) != nil {
 		panic(fmt.Errorf("expected %v, got %v", tString, p.peek().tt))
+	}
+	return p.next().value
+}
+
+// nextIdent returns the next identifier from the lexer as a string.
+// Panics if the next token is not an identifier
+func (p *Parser) nextIdent() string {
+	if p.expect(tIdent) != nil {
+		panic(fmt.Errorf("expected %v, got %v", tIdent, p.peek().tt))
 	}
 	return p.next().value
 }

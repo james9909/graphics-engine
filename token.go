@@ -20,10 +20,12 @@ const (
 
 	keywordBeginning
 	LINE
-	IDENT
 	SCALE
 	MOVE
 	ROTATE
+	XAXIS
+	YAXIS
+	ZAXIS
 	SAVE
 	DISPLAY
 	CIRCLE
@@ -52,6 +54,9 @@ var tokens = map[TokenType]string{
 	SCALE:   "scale",
 	MOVE:    "move",
 	ROTATE:  "rotate",
+	XAXIS:   "x",
+	YAXIS:   "y",
+	ZAXIS:   "z",
 	SAVE:    "save",
 	DISPLAY: "display",
 	CIRCLE:  "circle",
