@@ -49,7 +49,6 @@ var tokens = map[TokenType]string{
 	tIllegal: "ILLEGAL",
 
 	LINE:    "line",
-	IDENT:   "ident",
 	SCALE:   "scale",
 	MOVE:    "move",
 	ROTATE:  "rotate",

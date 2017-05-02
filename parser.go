@@ -89,8 +89,6 @@ func (p *Parser) parseIdent(t Token) error {
 		y1 := p.nextFloat()
 		z1 := p.nextFloat()
 		err = p.line(x0, y0, z0, x1, y1, z1)
-	case IDENT:
-		p.tm = IdentityMatrix(4)
 	case SCALE:
 		sx := p.nextFloat()
 		sy := p.nextFloat()
