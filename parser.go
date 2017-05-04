@@ -20,12 +20,13 @@ const (
 
 // Parser is a script parser
 type Parser struct {
-	frame  *Image  // current image
-	em     *Matrix // underlying edge/polygon matrix
-	tm     *Matrix // transformation matrix
-	cs     *Stack  // relative coordinate system stack
-	lexer  *Lexer  // lexer
-	backup []Token // token backup
+	frame    *Image    // current image
+	em       *Matrix   // underlying edge/polygon matrix
+	tm       *Matrix   // transformation matrix
+	cs       *Stack    // relative coordinate system stack
+	lexer    *Lexer    // lexer
+	backup   []Token   // token backup
+	commands []Command // list of commands
 }
 
 // NewParser returns a new parser
@@ -54,120 +55,162 @@ func (p *Parser) ParseFile(filename string) error {
 // ParseString parses a string for commands and executes them
 func (p *Parser) ParseString(input string) error {
 	p.lexer = Lex(input)
-	err := p.parse()
+	commands, err := p.parseCommands()
+	if err == nil {
+		p.commands = commands
+		err = p.parse()
+	}
 	return err
 }
 
-func (p *Parser) parse() error {
+func (p *Parser) parseCommands() ([]Command, error) {
+	commands := make([]Command, 0, 10)
 	for {
 		t := p.next()
 		switch t.tt {
 		case tError:
-			return errors.New(t.value)
+			return nil, errors.New(t.value)
 		case tEOF:
-			return nil
+			return commands, nil
 		case tIdent:
-			err := p.parseIdent(t)
-			if err != nil {
-				return err
+			var command Command
+			switch Lookup(t.value) {
+			case MOVE:
+				c := MoveCommand{}
+				c.args = []float64{p.nextFloat(), p.nextFloat(), p.nextFloat()}
+				if p.peek().tt == tString {
+					c.knob = p.next().value
+				}
+				command = c
+			case SCALE:
+				c := ScaleCommand{}
+				c.args = []float64{p.nextFloat(), p.nextFloat(), p.nextFloat()}
+				if p.peek().tt == tString {
+					c.knob = p.next().value
+				}
+				command = c
+			case ROTATE:
+				c := RotateCommand{}
+				c.axis = p.nextIdent()
+				c.degrees = p.nextFloat()
+				if p.peek().tt == tString {
+					c.knob = p.next().value
+				}
+				command = c
+			case LINE:
+				c := LineCommand{}
+				if p.peek().tt == tString {
+					c.constants = p.next().value
+				}
+				c.p1 = []float64{p.nextFloat(), p.nextFloat(), p.nextFloat()}
+				if p.peek().tt == tString {
+					c.cs = p.next().value
+				}
+				c.p2 = []float64{p.nextFloat(), p.nextFloat(), p.nextFloat()}
+				if p.peek().tt == tString {
+					c.cs2 = p.next().value
+				}
+				command = c
+			case SPHERE:
+				c := SphereCommand{}
+				if p.peek().tt == tString {
+					c.constants = p.next().value
+				}
+				c.center = []float64{p.nextFloat(), p.nextFloat(), p.nextFloat()}
+				c.radius = p.nextFloat()
+				if p.peek().tt == tString {
+					c.cs = p.next().value
+				}
+				command = c
+			case TORUS:
+				c := TorusCommand{}
+				if p.peek().tt == tString {
+					c.constants = p.next().value
+				}
+				c.center = []float64{p.nextFloat(), p.nextFloat(), p.nextFloat()}
+				c.r1 = p.nextFloat()
+				c.r2 = p.nextFloat()
+				if p.peek().tt == tString {
+					c.cs = p.next().value
+				}
+				command = c
+			case BOX:
+				c := BoxCommand{}
+				if p.peek().tt == tString {
+					c.constants = p.next().value
+				}
+				c.p1 = []float64{p.nextFloat(), p.nextFloat(), p.nextFloat()}
+				c.width = p.nextFloat()
+				c.height = p.nextFloat()
+				c.depth = p.nextFloat()
+				if p.peek().tt == tString {
+					c.cs = p.next().value
+				}
+				command = c
+			case POP:
+				command = PopCommand{}
+			case PUSH:
+				command = PushCommand{}
+			case SAVE:
+				command = SaveCommand{
+					filename: p.nextString(),
+				}
+			case DISPLAY:
+				command = DisplayCommand{}
+			case tIllegal:
+				return commands, fmt.Errorf("unrecognized identifier : \"%s\"", t)
 			}
-		default:
-			return fmt.Errorf("unexpected token %v", t)
+			if command != nil {
+				commands = append(commands, command)
+			}
 		}
 	}
+	return commands, nil
 }
 
-// parseIdent parses an identifier token
-func (p *Parser) parseIdent(t Token) error {
+func (p *Parser) parse() error {
 	var err error
-	switch Lookup(t.value) {
-	case LINE:
-		x0 := p.nextFloat()
-		y0 := p.nextFloat()
-		z0 := p.nextFloat()
-		x1 := p.nextFloat()
-		y1 := p.nextFloat()
-		z1 := p.nextFloat()
-		err = p.line(x0, y0, z0, x1, y1, z1)
-	case SCALE:
-		sx := p.nextFloat()
-		sy := p.nextFloat()
-		sz := p.nextFloat()
-		err = p.scale(sx, sy, sz)
-	case MOVE:
-		x := p.nextFloat()
-		y := p.nextFloat()
-		z := p.nextFloat()
-		err = p.move(x, y, z)
-	case ROTATE:
-		axis := p.nextIdent()
-		theta := p.nextFloat()
-		err = p.rotate(axis, theta)
-	case SAVE:
-		filename := p.nextString()
-		err = p.save(filename)
-	case DISPLAY:
-		err = p.display()
-	case CIRCLE:
-		cx := p.nextFloat()
-		cy := p.nextFloat()
-		cz := p.nextFloat()
-		radius := p.nextFloat()
-		err = p.circle(cx, cy, cz, radius)
-	case HERMITE:
-		x0 := p.nextFloat()
-		y0 := p.nextFloat()
-		x1 := p.nextFloat()
-		y1 := p.nextFloat()
-		dx0 := p.nextFloat()
-		dy0 := p.nextFloat()
-		dx1 := p.nextFloat()
-		dy1 := p.nextFloat()
-		err = p.hermite(x0, y0, x1, y1, dx0, dy0, dx1, dy1)
-	case BEZIER:
-		x0 := p.nextFloat()
-		y0 := p.nextFloat()
-		x1 := p.nextFloat()
-		y1 := p.nextFloat()
-		x2 := p.nextFloat()
-		y2 := p.nextFloat()
-		x3 := p.nextFloat()
-		y3 := p.nextFloat()
-		err = p.bezier(x0, y0, x1, y1, x2, y2, x3, y3)
-	case BOX:
-		x := p.nextFloat()
-		y := p.nextFloat()
-		z := p.nextFloat()
-		width := p.nextFloat()
-		height := p.nextFloat()
-		depth := p.nextFloat()
-		err = p.box(x, y, z, width, height, depth)
-	case CLEAR:
-		p.clear()
-	case SPHERE:
-		cx := p.nextFloat()
-		cy := p.nextFloat()
-		cz := p.nextFloat()
-		radius := p.nextFloat()
-		err = p.sphere(cx, cy, cz, radius)
-	case TORUS:
-		cx := p.nextFloat()
-		cy := p.nextFloat()
-		cz := p.nextFloat()
-		r1 := p.nextFloat()
-		r2 := p.nextFloat()
-		err = p.torus(cx, cy, cz, r1, r2)
-	case PUSH:
-		top := p.cs.Peek()
-		if top != nil {
-			p.cs.Push(top.Copy())
+	for _, command := range p.commands {
+		switch command.(type) {
+		case MoveCommand:
+			c := command.(MoveCommand)
+			err = p.move(c.args[0], c.args[1], c.args[2])
+		case ScaleCommand:
+			c := command.(ScaleCommand)
+			err = p.scale(c.args[0], c.args[1], c.args[2])
+		case RotateCommand:
+			c := command.(RotateCommand)
+			err = p.rotate(c.axis, c.degrees)
+		case LineCommand:
+			c := command.(LineCommand)
+			err = p.line(c.p1[0], c.p1[1], c.p1[2], c.p2[0], c.p2[1], c.p2[2])
+		case SphereCommand:
+			c := command.(SphereCommand)
+			err = p.sphere(c.center[0], c.center[1], c.center[2], c.radius)
+		case TorusCommand:
+			c := command.(TorusCommand)
+			err = p.torus(c.center[0], c.center[1], c.center[2], c.r1, c.r2)
+		case BoxCommand:
+			c := command.(BoxCommand)
+			err = p.box(c.p1[0], c.p1[1], c.p1[2], c.width, c.height, c.depth)
+		case PopCommand:
+			p.cs.Pop()
+		case PushCommand:
+			top := p.cs.Peek()
+			if top != nil {
+				p.cs.Push(top.Copy())
+			}
+		case SaveCommand:
+			c := command.(SaveCommand)
+			err = p.save(c.filename)
+		case DisplayCommand:
+			err = p.display()
 		}
-	case POP:
-		p.cs.Pop()
-	case tIllegal:
-		err = fmt.Errorf("unrecognized identifier: \"%s\"", t.value)
+		if err != nil {
+			return err
+		}
 	}
-	return err
+	return nil
 }
 
 // next returns the next token from the lexer
