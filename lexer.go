@@ -1,3 +1,4 @@
+// Lexing behavior adopted from the talk "Lexical Scanning in Go" (https://talks.golang.org/2011/lex.slide)
 package main
 
 import (
