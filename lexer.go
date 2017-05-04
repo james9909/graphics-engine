@@ -116,8 +116,6 @@ func lexRoot(l *Lexer) stateFn {
 	case r == eof:
 		l.emit(tEOF)
 		return nil
-	case r == '#':
-		return lexComment
 	case r == '\n' || r == '\r':
 		l.ignore()
 		return lexRoot
@@ -127,6 +125,11 @@ func lexRoot(l *Lexer) stateFn {
 	case strings.IndexRune(".+-0123456789", r) >= 0:
 		l.unread()
 		return lexNumber
+	case r == '/':
+		if l.peek() == '/' {
+			return lexComment
+		}
+		return lexString
 	case unicode.IsPrint(r):
 		return lexString
 	default:
