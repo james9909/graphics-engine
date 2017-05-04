@@ -32,7 +32,6 @@ type Parser struct {
 // NewParser returns a new parser
 func NewParser() *Parser {
 	cs := NewStack()
-	cs.Push(IdentityMatrix(4)) // stack should begin with the identity matrix
 	return &Parser{
 		frame:  NewImage(DefaultHeight, DefaultWidth),
 		em:     NewMatrix(4, 0),
@@ -199,10 +198,13 @@ func (p *Parser) parse() error {
 		case PopCommand:
 			p.cs.Pop()
 		case PushCommand:
-			top := p.cs.Peek()
-			if top != nil {
-				p.cs.Push(top.Copy())
+			var new *Matrix
+			if p.cs.IsEmpty() {
+				new = IdentityMatrix(4)
+			} else {
+				new = p.cs.Peek().Copy()
 			}
+			p.cs.Push(new)
 		case SaveCommand:
 			c := command.(SaveCommand)
 			err = p.save(c.filename)
