@@ -74,7 +74,7 @@ func (p *Parser) parseCommands() ([]Command, error) {
 			return commands, nil
 		case tIdent:
 			var command Command
-			switch Lookup(t.value) {
+			switch LookupIdent(t.value) {
 			case MOVE:
 				c := MoveCommand{}
 				c.args = []float64{p.nextFloat(), p.nextFloat(), p.nextFloat()}

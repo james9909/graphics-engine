@@ -191,7 +191,7 @@ func lexString(l *Lexer) stateFn {
 		r = l.next()
 	}
 	l.unread()
-	if Lookup(l.input[l.start:l.pos]) == tIllegal {
+	if LookupIdent(l.input[l.start:l.pos]) == tIllegal {
 		// Not a legal identifier, so treat it as a string
 		l.emit(tString)
 	} else {

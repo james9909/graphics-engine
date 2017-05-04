@@ -98,8 +98,8 @@ func (t Token) String() string {
 	return fmt.Sprintf("{%s %s}", t.tt, t.value)
 }
 
-// Lookup returns the corresponding token type for an identifier
-func Lookup(ident string) TokenType {
+// LookupIdent returns the corresponding token type for an identifier
+func LookupIdent(ident string) TokenType {
 	if tok, isKeyword := keywords[ident]; isKeyword {
 		return tok
 	}
