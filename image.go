@@ -40,23 +40,22 @@ func NewImage(height, width int) *Image {
 }
 
 // DrawLines draws all lines onto the Image
-func (image *Image) DrawLines(em *Matrix, c color.Color) {
+func (image *Image) DrawLines(em *Matrix, c color.Color) error {
 	if em.cols < 2 {
-		fmt.Println("2 or more points are required for drawing")
-		return
+		return errors.New("2 or more points are required for drawing")
 	}
 	for i := 0; i < em.cols-1; i += 2 {
 		p0 := em.GetColumn(i)
 		p1 := em.GetColumn(i + 1)
 		image.DrawLine(int(p0[0]), int(p0[1]), int(p1[0]), int(p1[1]), c)
 	}
+	return nil
 }
 
 // DrawPolygons draws all polygons onto the Image
-func (image *Image) DrawPolygons(em *Matrix, c color.Color) {
+func (image *Image) DrawPolygons(em *Matrix, c color.Color) error {
 	if em.cols < 3 {
-		fmt.Println("3 or more points are required for drawing")
-		return
+		return errors.New("3 or more points are required for drawing")
 	}
 	for i := 0; i < em.cols-2; i += 3 {
 		p0 := em.GetColumn(i)
@@ -68,6 +67,7 @@ func (image *Image) DrawPolygons(em *Matrix, c color.Color) {
 			image.DrawLine(int(p2[0]), int(p2[1]), int(p0[0]), int(p0[1]), c)
 		}
 	}
+	return nil
 }
 
 // DrawLine draws a single line onto the Image

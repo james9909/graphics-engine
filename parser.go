@@ -339,19 +339,22 @@ func (p *Parser) apply(mode DrawingMode) error {
 		return err
 	}
 	p.em = product
-	p.draw(mode)
+	if err := p.draw(mode); err != nil {
+		return err
+	}
 	p.clear()
 	return nil
 }
 
-func (p *Parser) draw(mode DrawingMode) {
+func (p *Parser) draw(mode DrawingMode) error {
+	var err error
 	switch mode {
 	case DrawLineMode:
-		p.frame.DrawLines(p.em, color.White)
+		err = p.frame.DrawLines(p.em, color.White)
 	case DrawPolygonMode:
-		p.frame.DrawPolygons(p.em, color.White)
-	default:
+		err = p.frame.DrawPolygons(p.em, color.White)
 	}
+	return err
 }
 
 func (p *Parser) save(filename string) error {
