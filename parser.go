@@ -163,6 +163,9 @@ func (p *Parser) parseCommands() ([]Command, error) {
 			if command != nil {
 				commands = append(commands, command)
 			}
+			if err := p.expect(tNewline); err != nil {
+				return nil, fmt.Errorf("unexpected %v at end of statement", p.peek().tt)
+			}
 		}
 	}
 	return commands, nil

@@ -117,7 +117,7 @@ func lexRoot(l *Lexer) stateFn {
 		l.emit(tEOF)
 		return nil
 	case r == '\n' || r == '\r':
-		l.ignore()
+		l.emit(tNewline)
 		return lexRoot
 	case r == ' ' || r == '\t':
 		l.ignore()

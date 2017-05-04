@@ -16,6 +16,7 @@ const (
 	tFloat                    // floating point
 	tIdent                    // identifier
 	tString                   // string
+	tNewline                  // new line
 	tIllegal
 
 	keywordBeginning
@@ -49,6 +50,7 @@ var tokens = map[TokenType]string{
 	tIdent:   "IDENTIFIER",
 	tString:  "STRING",
 	tIllegal: "ILLEGAL",
+	tNewline: "NEWLINE",
 
 	LINE:    "line",
 	SCALE:   "scale",
