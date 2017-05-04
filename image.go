@@ -199,16 +199,14 @@ func (image Image) Save(name string) error {
 	if err != nil {
 		return err
 	}
+	defer os.Remove(ppm)
+
 	args := []string{ppm, name}
 	_, err = exec.Command("convert", args...).Output()
 	if err != nil {
 		return err
 	}
 
-	err = os.Remove(ppm)
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -219,13 +217,10 @@ func (image Image) Display() error {
 	if err != nil {
 		return err
 	}
+	defer os.Remove(filename)
+
 	args := []string{filename}
 	_, err = exec.Command("display", args...).Output()
-	if err != nil {
-		return err
-	}
-
-	err = os.Remove(filename)
 	if err != nil {
 		return err
 	}
