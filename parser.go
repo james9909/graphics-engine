@@ -223,9 +223,6 @@ func (p *Parser) next() Token {
 		return token
 	}
 	token := p.lexer.NextToken()
-	if token.tt == tError {
-		panic(token.value)
-	}
 	return token
 }
 
