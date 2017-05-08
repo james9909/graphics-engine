@@ -35,7 +35,7 @@ All transformations will operate as follows:
 
 move x y z [knob]           - translate
 scale x y z [knob]          - scale
-rotate x|y|z degrees [knob]	- rotate (note that you can only
+rotate x|y|z degrees [knob] - rotate (note that you can only
                             specify one axis, x, y, or z per
                             rotation instruction)
 
