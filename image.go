@@ -182,8 +182,8 @@ func (image Image) SavePpm(name string) error {
 	if err != nil {
 		return err
 	}
+	defer f.Close()
 	f.WriteString(buffer.String())
-	f.Close()
 	return err
 }
 
