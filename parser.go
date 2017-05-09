@@ -156,8 +156,6 @@ func (p *Parser) parseCommands() ([]Command, error) {
 				}
 			case DISPLAY:
 				command = DisplayCommand{}
-			case tIllegal:
-				return commands, fmt.Errorf("unrecognized identifier : \"%s\"", t)
 			}
 			if command != nil {
 				commands = append(commands, command)
@@ -165,6 +163,8 @@ func (p *Parser) parseCommands() ([]Command, error) {
 			if err := p.expect(tNewline); err != nil {
 				return nil, fmt.Errorf("unexpected %v at end of statement", p.peek().tt)
 			}
+		case tString:
+			return commands, fmt.Errorf("unrecognized identifier: \"%s\"", t.value)
 		}
 	}
 	return commands, nil
