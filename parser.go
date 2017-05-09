@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"image/color"
 	"io/ioutil"
+	"os"
 	"strconv"
 )
 
@@ -39,6 +42,18 @@ func NewParser() *Parser {
 		cs:     cs,
 		backup: make([]Token, 0, 10),
 	}
+}
+
+// ParseInput parses a file for commands and executes them
+func (p *Parser) ParseInput() error {
+	scanner := bufio.NewScanner(os.Stdin)
+	var input bytes.Buffer
+	for scanner.Scan() {
+		input.Write(scanner.Bytes())
+		input.WriteRune('\n')
+	}
+	err := p.ParseString(input.String())
+	return err
 }
 
 // ParseFile parses a file for commands and executes them

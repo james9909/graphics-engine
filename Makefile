@@ -2,7 +2,7 @@ build:
 	go build -o main
 
 run:
-	./main
+	./main script
 
 clean:
 	rm -f *.png
