@@ -25,7 +25,6 @@ const (
 type Parser struct {
 	frame    *Image    // current image
 	em       *Matrix   // underlying edge/polygon matrix
-	tm       *Matrix   // transformation matrix
 	cs       *Stack    // relative coordinate system stack
 	lexer    *Lexer    // lexer
 	backup   []Token   // token backup
@@ -38,7 +37,6 @@ func NewParser() *Parser {
 	return &Parser{
 		frame:  NewImage(DefaultHeight, DefaultWidth),
 		em:     NewMatrix(4, 0),
-		tm:     IdentityMatrix(4),
 		cs:     cs,
 		backup: make([]Token, 0, 10),
 	}
