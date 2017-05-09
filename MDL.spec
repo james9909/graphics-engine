@@ -119,7 +119,7 @@ MISC
 //                  comment to the end of a line, just like c++
 save_coord_system name
                     - Makes a copy of the top of the stack and
-                    saves it in the symbol table under "name."
+                    saves it in the symbol table under "name".
 
 camera eye aim      - establishes a camera. Eye and aim are
                     x y z triples.
@@ -128,7 +128,7 @@ camera eye aim      - establishes a camera. Eye and aim are
 save filename       - save the image in its current state under
                     the name "filename."
 
-gereate_rayfiles    - Instruct the interpreter to generate source
+generate_rayfiles   - Instruct the interpreter to generate source
                     files for a ray tracer for each frame rendered.
 
 focal value         - set the focal length of the camera
