@@ -539,5 +539,5 @@ func (p *Parser) torus(cx, cy, cz, r1, r2 float64) error {
 func (p *Parser) reset() {
 	p.clear()
 	p.cs = NewStack()
-	p.frame = NewImage(p.frame.height, p.frame.width)
+	p.frame.Fill(Black)
 }
