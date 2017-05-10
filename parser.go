@@ -76,7 +76,7 @@ func (p *Parser) ParseFile(filename string) error {
 // ParseString parses a string for commands and executes them
 func (p *Parser) ParseString(input string) error {
 	p.lexer = Lex(input)
-	commands, err := p.parseCommands()
+	commands, err := p.parse()
 	if err == nil {
 		p.commands = commands
 		err = p.process()
@@ -84,7 +84,7 @@ func (p *Parser) ParseString(input string) error {
 	return err
 }
 
-func (p *Parser) parseCommands() ([]Command, error) {
+func (p *Parser) parse() ([]Command, error) {
 	commands := make([]Command, 0, 10)
 	for {
 		t := p.next()
