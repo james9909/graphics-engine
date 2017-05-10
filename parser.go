@@ -95,7 +95,7 @@ func (p *Parser) parse() ([]Command, error) {
 		case tEOF:
 			if p.isAnimated {
 				if p.basename == "" {
-					fmt.Fprintf(os.Stderr, "No basename provided: using default basename '%s'", DefaultBasename)
+					fmt.Fprintf(os.Stderr, "No basename provided: using default basename '%s'\n", DefaultBasename)
 					p.basename = DefaultBasename
 					p.formatString = fmt.Sprintf("%s/%s-%%0%dd.png", FramesDirectory, p.basename, len(strconv.Itoa(p.frames)))
 				}
