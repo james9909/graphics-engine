@@ -198,7 +198,7 @@ func (image Image) Save(name string) error {
 		return errors.New("no extension provided")
 	}
 	base := name[:index]
-	ppm := base + ".ppm"
+	ppm := base + "-tmp.ppm"
 	err := image.SavePpm(ppm)
 	if err != nil {
 		return err
