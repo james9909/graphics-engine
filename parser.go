@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"image/color"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -480,9 +479,9 @@ func (p *Parser) draw(mode DrawingMode) error {
 	var err error
 	switch mode {
 	case DrawLineMode:
-		err = p.frame.DrawLines(p.em, color.White)
+		err = p.frame.DrawLines(p.em, White)
 	case DrawPolygonMode:
-		err = p.frame.DrawPolygons(p.em, color.White)
+		err = p.frame.DrawPolygons(p.em, White)
 	}
 	return err
 }

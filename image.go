@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"image/color"
 	"os"
 	"os/exec"
 	"strings"
@@ -18,33 +17,44 @@ const (
 )
 
 var (
-	DefaultColor = color.Black // DefaultColor is the default image background color
+	Black = NewColor(0, 0, 0)
+	White = NewColor(255, 255, 255)
 )
+
+type Color struct {
+	r int
+	b int
+	g int
+}
+
+func NewColor(r, g, b int) Color {
+	return Color{r, g, b}
+}
 
 // Image represents an image
 type Image struct {
-	frame  [][]color.Color
+	frame  [][]Color
 	height int
 	width  int
 }
 
 // NewImage returns a new Image with the given height and width
 func NewImage(height, width int) *Image {
-	frame := make([][]color.Color, height)
+	frame := make([][]Color, height)
 	for i := 0; i < height; i++ {
-		frame[i] = make([]color.Color, width)
+		frame[i] = make([]Color, width)
 	}
 	image := &Image{
 		frame:  frame,
 		height: height,
 		width:  width,
 	}
-	image.Fill(DefaultColor)
+	image.Fill(Black)
 	return image
 }
 
 // DrawLines draws all lines onto the Image
-func (image *Image) DrawLines(em *Matrix, c color.Color) error {
+func (image *Image) DrawLines(em *Matrix, c Color) error {
 	if em.cols < 2 {
 		return errors.New("2 or more points are required for drawing")
 	}
@@ -57,7 +67,7 @@ func (image *Image) DrawLines(em *Matrix, c color.Color) error {
 }
 
 // DrawPolygons draws all polygons onto the Image
-func (image *Image) DrawPolygons(em *Matrix, c color.Color) error {
+func (image *Image) DrawPolygons(em *Matrix, c Color) error {
 	if em.cols < 3 {
 		return errors.New("3 or more points are required for drawing")
 	}
@@ -75,7 +85,7 @@ func (image *Image) DrawPolygons(em *Matrix, c color.Color) error {
 }
 
 // DrawLine draws a single line onto the Image
-func (image *Image) DrawLine(x1, y1, x2, y2 int, c color.Color) {
+func (image *Image) DrawLine(x1, y1, x2, y2 int, c Color) {
 	if x1 > x2 {
 		x1, x2 = x2, x1
 		y1, y2 = y2, y1
@@ -99,7 +109,7 @@ func (image *Image) DrawLine(x1, y1, x2, y2 int, c color.Color) {
 	}
 }
 
-func (image Image) drawOctant1(x1, y1, x2, y2, A, B int, c color.Color) {
+func (image Image) drawOctant1(x1, y1, x2, y2, A, B int, c Color) {
 	d := A + B/2
 	for x1 <= x2 {
 		image.set(x1, y1, c)
@@ -112,7 +122,7 @@ func (image Image) drawOctant1(x1, y1, x2, y2, A, B int, c color.Color) {
 	}
 }
 
-func (image Image) drawOctant2(x1, y1, x2, y2, A, B int, c color.Color) {
+func (image Image) drawOctant2(x1, y1, x2, y2, A, B int, c Color) {
 	d := A/2 + B
 	for y1 <= y2 {
 		image.set(x1, y1, c)
@@ -125,7 +135,7 @@ func (image Image) drawOctant2(x1, y1, x2, y2, A, B int, c color.Color) {
 	}
 }
 
-func (image Image) drawOctant7(x1, y1, x2, y2, A, B int, c color.Color) {
+func (image Image) drawOctant7(x1, y1, x2, y2, A, B int, c Color) {
 	d := A/2 + B
 	for y1 >= y2 {
 		image.set(x1, y1, c)
@@ -138,7 +148,7 @@ func (image Image) drawOctant7(x1, y1, x2, y2, A, B int, c color.Color) {
 	}
 }
 
-func (image Image) drawOctant8(x1, y1, x2, y2, A, B int, c color.Color) {
+func (image Image) drawOctant8(x1, y1, x2, y2, A, B int, c Color) {
 	d := A - B/2
 	for x1 <= x2 {
 		image.set(x1, y1, c)
@@ -152,7 +162,7 @@ func (image Image) drawOctant8(x1, y1, x2, y2, A, B int, c color.Color) {
 }
 
 // Fill completely fills the Image with a single color
-func (image Image) Fill(c color.Color) {
+func (image Image) Fill(c Color) {
 	for y := 0; y < image.height; y++ {
 		for x := 0; x < image.width; x++ {
 			image.set(x, y, c)
@@ -160,7 +170,7 @@ func (image Image) Fill(c color.Color) {
 	}
 }
 
-func (image Image) set(x, y int, c color.Color) error {
+func (image Image) set(x, y int, c Color) error {
 	if x < 0 || x >= image.width {
 		return errors.New("invalid x coordinate")
 	}
@@ -178,8 +188,7 @@ func (image Image) SavePpm(name string) error {
 	for y := 0; y < image.height; y++ {
 		for x := 0; x < image.width; x++ {
 			color := image.frame[image.height-y-1][x]
-			r, g, b, _ := color.RGBA()
-			buffer.WriteString(fmt.Sprintf("%d %d %d\n", r/256, g/256, b/256))
+			buffer.WriteString(fmt.Sprintf("%d %d %d\n", color.r, color.b, color.g))
 		}
 	}
 	f, err := os.OpenFile(name, os.O_CREATE|os.O_WRONLY, 0666)
