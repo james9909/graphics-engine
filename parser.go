@@ -182,7 +182,13 @@ func (p *Parser) parseCommands() ([]Command, error) {
 			case VARY:
 				name := p.nextString()
 				startFrame := p.nextInt()
+				if startFrame < 0 || startFrame >= p.frames {
+					return nil, errors.New("invalid start frame")
+				}
 				endFrame := p.nextInt()
+				if endFrame < 0 || endFrame >= p.frames || endFrame < startFrame {
+					return nil, errors.New("invalid end frame")
+				}
 				startValue := p.nextFloat()
 				endValue := p.nextFloat()
 				length := endFrame - startFrame
