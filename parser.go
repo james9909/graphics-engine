@@ -98,7 +98,7 @@ func (p *Parser) parse() ([]Command, error) {
 				if p.basename == "" {
 					fmt.Fprintf(os.Stderr, "No basename provided: using default basename '%s'\n", DefaultBasename)
 					p.basename = DefaultBasename
-					p.formatString = fmt.Sprintf("%s/%s-%%0%dd.png", FramesDirectory, p.basename, len(strconv.Itoa(p.frames)))
+					p.formatString = fmt.Sprintf("%s/%s-%%0%dd.ppm", FramesDirectory, p.basename, len(strconv.Itoa(p.frames)))
 				}
 			}
 			return commands, nil
@@ -219,7 +219,7 @@ func (p *Parser) parse() ([]Command, error) {
 					fmt.Fprintln(os.Stderr, "Setting the basename multiple times")
 				}
 				p.basename = p.nextString()
-				p.formatString = fmt.Sprintf("%s/%s-%%0%dd.png", FramesDirectory, p.basename, len(strconv.Itoa(p.frames)))
+				p.formatString = fmt.Sprintf("%s/%s-%%0%dd.ppm", FramesDirectory, p.basename, len(strconv.Itoa(p.frames)))
 				p.isAnimated = true
 			case FRAMES:
 				if p.frames != 0 {
