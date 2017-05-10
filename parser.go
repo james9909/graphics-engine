@@ -187,6 +187,9 @@ func (p *Parser) parse() ([]Command, error) {
 			case DISPLAY:
 				command = DisplayCommand{}
 			case VARY:
+				if p.frames == 0 {
+					return nil, errors.New("number of frames is not set")
+				}
 				name := p.nextString()
 				knob, found := p.knobs[name]
 				if !found {
