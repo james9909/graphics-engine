@@ -19,6 +19,7 @@ const (
 	// DrawPolygonMode is a draw argument that draws 3D polygons onto the Image
 	DrawPolygonMode
 
+	DefaultBasename = "frame"  // Default frame basename
 	FramesDirectory = "frames" // FramesDirectory is the directory containing all animation frames
 )
 
@@ -92,6 +93,13 @@ func (p *Parser) parse() ([]Command, error) {
 		case tError:
 			return nil, errors.New(t.value)
 		case tEOF:
+			if p.isAnimated {
+				if p.basename == "" {
+					fmt.Fprintf(os.Stderr, "No basename provided: using default basename '%s'", DefaultBasename)
+					p.basename = DefaultBasename
+					p.formatString = fmt.Sprintf("%s/%s-%%0%dd.png", FramesDirectory, p.basename, len(strconv.Itoa(p.frames)))
+				}
+			}
 			return commands, nil
 		case tIdent:
 			var command Command
