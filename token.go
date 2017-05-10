@@ -38,6 +38,9 @@ const (
 	TORUS
 	PUSH
 	POP
+	VARY
+	BASENAME
+	FRAMES
 	keywordEnd
 )
 
@@ -52,24 +55,27 @@ var tokens = map[TokenType]string{
 	tIllegal: "ILLEGAL",
 	tNewline: "NEWLINE",
 
-	LINE:    "line",
-	SCALE:   "scale",
-	MOVE:    "move",
-	ROTATE:  "rotate",
-	XAXIS:   "x",
-	YAXIS:   "y",
-	ZAXIS:   "z",
-	SAVE:    "save",
-	DISPLAY: "display",
-	CIRCLE:  "circle",
-	HERMITE: "hermite",
-	BEZIER:  "bezier",
-	BOX:     "box",
-	CLEAR:   "clear",
-	SPHERE:  "sphere",
-	TORUS:   "torus",
-	PUSH:    "push",
-	POP:     "pop",
+	LINE:     "line",
+	SCALE:    "scale",
+	MOVE:     "move",
+	ROTATE:   "rotate",
+	XAXIS:    "x",
+	YAXIS:    "y",
+	ZAXIS:    "z",
+	SAVE:     "save",
+	DISPLAY:  "display",
+	CIRCLE:   "circle",
+	HERMITE:  "hermite",
+	BEZIER:   "bezier",
+	BOX:      "box",
+	CLEAR:    "clear",
+	SPHERE:   "sphere",
+	TORUS:    "torus",
+	PUSH:     "push",
+	POP:      "pop",
+	VARY:     "vary",
+	BASENAME: "basename",
+	FRAMES:   "frames",
 }
 
 var keywords map[string]TokenType

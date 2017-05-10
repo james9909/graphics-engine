@@ -19,6 +19,8 @@ const (
 	DrawLineMode DrawingMode = iota
 	// DrawPolygonMode is a draw argument that draws 3D polygons onto the Image
 	DrawPolygonMode
+
+	FramesDirectory = "frames" // FramesDirectory is the directory containing all animation frames
 )
 
 // Parser is a script parser
@@ -29,16 +31,24 @@ type Parser struct {
 	lexer    *Lexer    // lexer
 	backup   []Token   // token backup
 	commands []Command // list of commands
+
+	isAnimated   bool                 // whether or not to parse as an animation
+	frames       int                  // number of frames in the animation
+	basename     string               // animation basename
+	formatString string               // format string for each frame of the animation
+	knobs        map[string][]float64 // knob symbol table
 }
 
 // NewParser returns a new parser
 func NewParser() *Parser {
 	cs := NewStack()
 	return &Parser{
-		frame:  NewImage(DefaultHeight, DefaultWidth),
-		em:     NewMatrix(4, 0),
-		cs:     cs,
-		backup: make([]Token, 0, 10),
+		frame:      NewImage(DefaultHeight, DefaultWidth),
+		em:         NewMatrix(4, 0),
+		cs:         cs,
+		backup:     make([]Token, 0, 10),
+		isAnimated: false,
+		knobs:      make(map[string][]float64),
 	}
 }
 
@@ -70,7 +80,7 @@ func (p *Parser) ParseString(input string) error {
 	commands, err := p.parseCommands()
 	if err == nil {
 		p.commands = commands
-		err = p.parse()
+		err = p.process()
 	}
 	return err
 }
@@ -169,6 +179,34 @@ func (p *Parser) parseCommands() ([]Command, error) {
 				}
 			case DISPLAY:
 				command = DisplayCommand{}
+			case VARY:
+				name := p.nextString()
+				startFrame := p.nextInt()
+				endFrame := p.nextInt()
+				startValue := p.nextFloat()
+				endValue := p.nextFloat()
+				length := endFrame - startFrame
+				delta := (endValue - startValue) / float64(length+1)
+				knob := make([]float64, p.frames)
+				for frame := startFrame; frame <= endFrame; frame++ {
+					knob[frame] = startValue
+					startValue += delta
+				}
+				p.knobs[name] = knob
+				p.isAnimated = true
+			case BASENAME:
+				if p.basename != "" {
+					fmt.Fprintln(os.Stderr, "Setting the basename multiple times")
+				}
+				p.basename = p.nextString()
+				p.formatString = fmt.Sprintf("%s/%s-%%0%dd.png", FramesDirectory, p.basename, len(strconv.Itoa(p.frames)))
+				p.isAnimated = true
+			case FRAMES:
+				if p.frames != 0 {
+					fmt.Fprintln(os.Stderr, "Setting the number of frames multiple times")
+				}
+				p.frames = p.nextInt()
+				p.isAnimated = true
 			}
 			if command != nil {
 				commands = append(commands, command)
@@ -183,52 +221,110 @@ func (p *Parser) parseCommands() ([]Command, error) {
 	return commands, nil
 }
 
-func (p *Parser) parse() error {
-	var err error
-	for _, command := range p.commands {
-		switch command.(type) {
-		case MoveCommand:
-			c := command.(MoveCommand)
-			err = p.move(c.args[0], c.args[1], c.args[2])
-		case ScaleCommand:
-			c := command.(ScaleCommand)
-			err = p.scale(c.args[0], c.args[1], c.args[2])
-		case RotateCommand:
-			c := command.(RotateCommand)
-			err = p.rotate(c.axis, c.degrees)
-		case LineCommand:
-			c := command.(LineCommand)
-			err = p.line(c.p1[0], c.p1[1], c.p1[2], c.p2[0], c.p2[1], c.p2[2])
-		case SphereCommand:
-			c := command.(SphereCommand)
-			err = p.sphere(c.center[0], c.center[1], c.center[2], c.radius)
-		case TorusCommand:
-			c := command.(TorusCommand)
-			err = p.torus(c.center[0], c.center[1], c.center[2], c.r1, c.r2)
-		case BoxCommand:
-			c := command.(BoxCommand)
-			err = p.box(c.p1[0], c.p1[1], c.p1[2], c.width, c.height, c.depth)
-		case PopCommand:
-			p.cs.Pop()
-		case PushCommand:
-			var new *Matrix
-			if p.cs.IsEmpty() {
-				new = IdentityMatrix(4)
-			} else {
-				new = p.cs.Peek().Copy()
-			}
-			p.cs.Push(new)
-		case SaveCommand:
-			c := command.(SaveCommand)
-			err = p.save(c.filename)
-		case DisplayCommand:
-			err = p.display()
+func (p *Parser) process() error {
+	if p.isAnimated {
+		if _, err := os.Stat(FramesDirectory); os.IsNotExist(err) {
+			os.Mkdir(FramesDirectory, 0755)
 		}
-		if err != nil {
-			return err
+	} else {
+		p.frames = 1
+	}
+	var err error
+	for frame := 0; frame < p.frames; frame++ {
+		if p.isAnimated {
+			fmt.Printf("Rendering frame %d/%d\033[F\n", frame, p.frames)
+		}
+		for _, command := range p.commands {
+			switch command.(type) {
+			case MoveCommand:
+				c := command.(MoveCommand)
+				x, y, z := c.args[0], c.args[1], c.args[2]
+				if c.knob != "" {
+					if knob, err := p.getKnobValue(c.knob, frame); err == nil {
+						x *= knob
+						y *= knob
+						z *= knob
+					} else {
+						return err
+					}
+				}
+				err = p.move(x, y, z)
+			case ScaleCommand:
+				c := command.(ScaleCommand)
+				x, y, z := c.args[0], c.args[1], c.args[2]
+				if c.knob != "" {
+					if knob, err := p.getKnobValue(c.knob, frame); err == nil {
+						x *= knob
+						y *= knob
+						z *= knob
+					} else {
+						return err
+					}
+				}
+				err = p.scale(x, y, z)
+			case RotateCommand:
+				c := command.(RotateCommand)
+				degrees := c.degrees
+				if c.knob != "" {
+					if knob, err := p.getKnobValue(c.knob, frame); err == nil {
+						degrees *= knob
+					} else {
+						return err
+					}
+				}
+				err = p.rotate(c.axis, degrees)
+			case LineCommand:
+				c := command.(LineCommand)
+				err = p.line(c.p1[0], c.p1[1], c.p1[2], c.p2[0], c.p2[1], c.p2[2])
+			case SphereCommand:
+				c := command.(SphereCommand)
+				err = p.sphere(c.center[0], c.center[1], c.center[2], c.radius)
+			case TorusCommand:
+				c := command.(TorusCommand)
+				err = p.torus(c.center[0], c.center[1], c.center[2], c.r1, c.r2)
+			case BoxCommand:
+				c := command.(BoxCommand)
+				err = p.box(c.p1[0], c.p1[1], c.p1[2], c.width, c.height, c.depth)
+			case PopCommand:
+				p.cs.Pop()
+			case PushCommand:
+				var new *Matrix
+				if p.cs.IsEmpty() {
+					new = IdentityMatrix(4)
+				} else {
+					new = p.cs.Peek().Copy()
+				}
+				p.cs.Push(new)
+			case SaveCommand:
+				c := command.(SaveCommand)
+				err = p.save(c.filename)
+			case DisplayCommand:
+				err = p.display()
+			}
+			if err != nil {
+				return err
+			}
+		}
+		if p.isAnimated {
+			err = p.save(fmt.Sprintf(p.formatString, frame))
+			if err != nil {
+				return err
+			}
+			p.reset()
 		}
 	}
 	return nil
+}
+
+func (p *Parser) getKnobValue(knobName string, frame int) (float64, error) {
+	if knob, knobFound := p.knobs[knobName]; knobFound {
+		if frame >= len(knob) {
+			return 0, fmt.Errorf("knob '%s' is undefined for frame %d", knobName, frame)
+		}
+		return knob[frame], nil
+	} else {
+		return 0, fmt.Errorf("undefined knob '%s'", knobName)
+	}
 }
 
 // next returns the next token from the lexer
@@ -242,6 +338,16 @@ func (p *Parser) next() Token {
 	}
 	token := p.lexer.NextToken()
 	return token
+}
+
+// nextInt returns the next integer token from the lexer
+// Panics if the next token is not an integer
+func (p *Parser) nextInt() int {
+	if p.expect(tInt) != nil {
+		panic(fmt.Errorf("expected %v, got %v", tInt, p.peek().tt))
+	}
+	v, _ := strconv.Atoi(p.next().value)
+	return v
 }
 
 // nextFloat returns the next token from the lexer as a float.
@@ -420,4 +526,10 @@ func (p *Parser) torus(cx, cy, cz, r1, r2 float64) error {
 	p.em.AddTorus(cx, cy, cz, r1, r2)
 	err := p.apply(DrawPolygonMode)
 	return err
+}
+
+func (p *Parser) reset() {
+	p.clear()
+	p.cs = NewStack()
+	p.frame = NewImage(p.frame.height, p.frame.width)
 }
