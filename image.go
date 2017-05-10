@@ -203,24 +203,29 @@ func (image Image) SavePpm(name string) error {
 // Save will save an Image into a given format
 func (image Image) Save(name string) error {
 	index := strings.Index(name, ".")
+	extension := ".ppm"
 	if index == -1 {
-		return errors.New("no extension provided")
+		extension = ".png"
+	} else {
+		extension = name[index:]
+		name = name[:index]
 	}
-	base := name[:index]
-	ppm := base + "-tmp.ppm"
+
+	if extension == ".ppm" {
+		// save as ppm without converting
+		err := image.SavePpm(fmt.Sprint(name, ".ppm"))
+		return err
+	}
+
+	ppm := fmt.Sprintf("%s-tmp.ppm", name)
 	err := image.SavePpm(ppm)
 	if err != nil {
 		return err
 	}
 	defer os.Remove(ppm)
-
-	args := []string{ppm, name}
+	args := []string{ppm, fmt.Sprint(name, extension)}
 	_, err = exec.Command("convert", args...).Output()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 // Display displays the Image
