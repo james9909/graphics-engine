@@ -245,9 +245,8 @@ func (p *Parser) parse() ([]Command, error) {
 
 func (p *Parser) process() error {
 	if p.isAnimated {
-		if _, err := os.Stat(FramesDirectory); os.IsNotExist(err) {
-			os.Mkdir(FramesDirectory, 0755)
-		}
+		os.RemoveAll(FramesDirectory)
+		os.Mkdir(FramesDirectory, 0755)
 	} else {
 		p.frames = 1
 	}
