@@ -328,8 +328,9 @@ func (p *Parser) process() error {
 				return err
 			}
 		}
-		fmt.Printf(" - %s\n", time.Since(start))
+		elapsed := time.Since(start)
 		if p.isAnimated {
+			fmt.Printf(" - %s\n", elapsed)
 			err = p.save(fmt.Sprintf(p.formatString, frame))
 			if err != nil {
 				return err
