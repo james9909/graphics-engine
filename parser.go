@@ -231,7 +231,7 @@ func (p *Parser) parse() ([]Command, error) {
 				return nil, fmt.Errorf("unexpected %v at end of statement", p.peek().tt)
 			}
 		case tString:
-			return commands, fmt.Errorf("unrecognized identifier: \"%s\"", t.value)
+			return nil, fmt.Errorf("unrecognized identifier: \"%s\"", t.value)
 		}
 	}
 	return commands, nil
