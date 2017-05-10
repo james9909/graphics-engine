@@ -1,5 +1,8 @@
+## Graphics Engine
+A graphics engine written in Go.
+
 #### Instructions
 
 Compile the program with `make`
 
-Run with `make run`
+To run the graphics engine, run `./main <script>`
