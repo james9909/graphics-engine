@@ -22,12 +22,12 @@ var (
 )
 
 type Color struct {
-	r int
-	b int
-	g int
+	r byte
+	b byte
+	g byte
 }
 
-func NewColor(r, g, b int) Color {
+func NewColor(r, g, b byte) Color {
 	return Color{r, g, b}
 }
 
