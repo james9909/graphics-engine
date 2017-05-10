@@ -225,6 +225,9 @@ func (p *Parser) parse() ([]Command, error) {
 					fmt.Fprintln(os.Stderr, "Setting the number of frames multiple times")
 				}
 				p.frames = p.nextInt()
+				if p.frames <= 0 {
+					return nil, errors.New("number of frames must be greater than zero")
+				}
 				p.isAnimated = true
 			}
 			if command != nil {
