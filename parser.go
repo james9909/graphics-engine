@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strconv"
+	"time"
 )
 
 // DrawingMode defines the type of each drawing mode
@@ -253,8 +254,9 @@ func (p *Parser) process() error {
 	var err error
 	for frame := 0; frame < p.frames; frame++ {
 		if p.isAnimated {
-			fmt.Printf("Rendering frame %d/%d\033[F\n", frame, p.frames)
+			fmt.Printf("Rendering frame %d/%d", frame+1, p.frames)
 		}
+		start := time.Now()
 		for _, command := range p.commands {
 			switch command.(type) {
 			case MoveCommand:
@@ -326,6 +328,7 @@ func (p *Parser) process() error {
 				return err
 			}
 		}
+		fmt.Printf(" - %s\n", time.Since(start))
 		if p.isAnimated {
 			err = p.save(fmt.Sprintf(p.formatString, frame))
 			if err != nil {
