@@ -186,11 +186,11 @@ func (p *Parser) parseCommands() ([]Command, error) {
 				}
 				startFrame := p.nextInt()
 				if startFrame < 0 || startFrame >= p.frames {
-					return nil, errors.New("invalid start frame")
+					return nil, fmt.Errorf("invalid start frame %d for knob %s", name, startFrame)
 				}
 				endFrame := p.nextInt()
 				if endFrame < 0 || endFrame >= p.frames || endFrame < startFrame {
-					return nil, errors.New("invalid end frame")
+					return nil, fmt.Errorf("invalid end frame %d for knob %s", name, endFrame)
 				}
 				startValue := p.nextFloat()
 				endValue := p.nextFloat()
