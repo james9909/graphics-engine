@@ -181,6 +181,10 @@ func (p *Parser) parseCommands() ([]Command, error) {
 				command = DisplayCommand{}
 			case VARY:
 				name := p.nextString()
+				knob, found := p.knobs[name]
+				if !found {
+					knob = make([]float64, p.frames)
+				}
 				startFrame := p.nextInt()
 				if startFrame < 0 || startFrame >= p.frames {
 					return nil, errors.New("invalid start frame")
@@ -193,7 +197,6 @@ func (p *Parser) parseCommands() ([]Command, error) {
 				endValue := p.nextFloat()
 				length := endFrame - startFrame
 				delta := (endValue - startValue) / float64(length+1)
-				knob := make([]float64, p.frames)
 				for frame := startFrame; frame <= endFrame; frame++ {
 					knob[frame] = startValue
 					startValue += delta
