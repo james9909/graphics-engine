@@ -18,7 +18,7 @@ const (
 )
 
 var (
-	DefaultColor = color.Black // Default pixel color
+	DefaultColor = color.Black // DefaultColor is the default image background color
 )
 
 // Image represents an image
