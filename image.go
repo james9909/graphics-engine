@@ -17,6 +17,10 @@ const (
 	DefaultWidth = 500
 )
 
+var (
+	DefaultColor = color.Black // Default pixel color
+)
+
 // Image represents an image
 type Image struct {
 	frame  [][]color.Color
@@ -35,7 +39,7 @@ func NewImage(height, width int) *Image {
 		height: height,
 		width:  width,
 	}
-	image.Fill(color.Black)
+	image.Fill(DefaultColor)
 	return image
 }
 
