@@ -47,7 +47,7 @@ func NewParser() *Parser {
 		frame:      NewImage(DefaultHeight, DefaultWidth),
 		em:         NewMatrix(4, 0),
 		cs:         cs,
-		backup:     make([]Token, 0, 10),
+		backup:     make([]Token, 0, 50),
 		isAnimated: false,
 		knobs:      make(map[string][]float64),
 	}
@@ -87,7 +87,7 @@ func (p *Parser) ParseString(input string) error {
 }
 
 func (p *Parser) parse() ([]Command, error) {
-	commands := make([]Command, 0, 10)
+	commands := make([]Command, 0, 50)
 	for {
 		t := p.next()
 		switch t.tt {
@@ -406,9 +406,6 @@ func (p *Parser) nextIdent() string {
 // unread adds the token to the list of backup tokens.
 // Since channels cannot be "unread", we use a list to backup these tokens
 func (p *Parser) unread(token Token) {
-	if p.backup == nil {
-		p.backup = make([]Token, 0, 10)
-	}
 	p.backup = append(p.backup, token)
 }
 
