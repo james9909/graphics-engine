@@ -338,7 +338,11 @@ func (p *Parser) process() error {
 			p.reset()
 		}
 	}
-	return nil
+	if p.isAnimated {
+		fmt.Println("Making animation...")
+		err = MakeAnimation(p.basename)
+	}
+	return err
 }
 
 func (p *Parser) getKnobValue(knobName string, frame int) (float64, error) {

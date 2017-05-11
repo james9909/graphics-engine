@@ -238,11 +238,17 @@ func (image Image) Display() error {
 	defer os.Remove(filename)
 
 	args := []string{filename}
-	_, err = exec.Command("display", args...).Output()
-	if err != nil {
-		return err
-	}
-	return nil
+	err = exec.Command("display", args...).Run()
+	return err
+}
+
+// MakeAnimation converts individual frames to a gif
+func MakeAnimation(basename string) error {
+	path := fmt.Sprintf("%s/%s*", FramesDirectory, basename)
+	gif := fmt.Sprintf("%s.gif", basename)
+	args := []string{"-delay", "3", path, gif}
+	err := exec.Command("convert", args...).Run()
+	return err
 }
 
 func isVisible(p0, p1, p2 []float64) bool {
