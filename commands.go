@@ -1,8 +1,5 @@
 package main
 
-// type Command struct {
-// }
-
 type Command interface {
 	Name() string
 }
