@@ -224,7 +224,7 @@ func (image Image) Save(name string) error {
 	}
 	defer os.Remove(ppm)
 	args := []string{ppm, fmt.Sprint(name, extension)}
-	_, err = exec.Command("convert", args...).Output()
+	err = exec.Command("convert", args...).Run()
 	return err
 }
 
