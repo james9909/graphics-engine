@@ -374,42 +374,41 @@ func (p *Parser) nextToken() Token {
 	return token
 }
 
+// next returns the value of the next token if its type is valid
+func (p *Parser) next(typs ...TokenType) string {
+	next := p.peek()
+	for _, tt := range typs {
+		if next.tt == tt {
+			return next.value
+		}
+	}
+	panic(fmt.Errorf("expected %v, got %v", typs, next.tt))
+}
+
 // nextInt returns the next integer token from the lexer
 // Panics if the next token is not an integer
 func (p *Parser) nextInt() int {
-	if p.expect(tInt) != nil {
-		panic(fmt.Errorf("expected %v, got %v", tInt, p.peek().tt))
-	}
-	v, _ := strconv.Atoi(p.nextToken().value)
+	v, _ := strconv.Atoi(p.next(tInt))
 	return v
 }
 
 // nextFloat returns the next token from the lexer as a float.
 // Panics if the next token is not a float or integer
 func (p *Parser) nextFloat() float64 {
-	if p.expect(tInt) != nil && p.expect(tFloat) != nil {
-		panic(fmt.Errorf("expected %v, got %v", tFloat, p.peek().tt))
-	}
-	v, _ := strconv.ParseFloat(p.nextToken().value, 64)
+	v, _ := strconv.ParseFloat(p.next(tInt, tFloat), 64)
 	return v
 }
 
 // nextString returns the next token from the lexer.
 // Panics if the next token is not a string
 func (p *Parser) nextString() string {
-	if p.expect(tString) != nil {
-		panic(fmt.Errorf("expected %v, got %v", tString, p.peek().tt))
-	}
-	return p.nextToken().value
+	return p.next(tString)
 }
 
 // nextIdent returns the next identifier from the lexer as a string.
 // Panics if the next token is not an identifier
 func (p *Parser) nextIdent() string {
-	if p.expect(tIdent) != nil {
-		panic(fmt.Errorf("expected %v, got %v", tIdent, p.peek().tt))
-	}
-	return p.nextToken().value
+	return p.next(tIdent)
 }
 
 // unread adds the token to the list of backup tokens.
@@ -420,16 +419,7 @@ func (p *Parser) unread(token Token) {
 
 // peek returns the next token without consuming it
 func (p *Parser) peek() Token {
-	token := p.next()
+	token := p.nextToken()
 	p.unread(token)
 	return token
-}
-
-// expect returns an error if the next token is not a certain type
-func (p *Parser) expect(tt TokenType) error {
-	other := p.peek().tt
-	if other != tt {
-		return fmt.Errorf("expected %v, got %v", tt, other)
-	}
-	return nil
 }
