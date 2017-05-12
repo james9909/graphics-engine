@@ -11,24 +11,14 @@ import (
 	"time"
 )
 
-// DrawingMode defines the type of each drawing mode
-type DrawingMode int
-
 const (
-	// DrawLineMode is a draw argument that draws 2D lines onto the Image
-	DrawLineMode DrawingMode = iota
-	// DrawPolygonMode is a draw argument that draws 3D polygons onto the Image
-	DrawPolygonMode
-
 	DefaultBasename = "frame"  // Default frame basename
 	FramesDirectory = "frames" // FramesDirectory is the directory containing all animation frames
 )
 
 // Parser is a script parser
 type Parser struct {
-	frame    *Image    // current image
-	em       *Matrix   // underlying edge/polygon matrix
-	cs       *Stack    // relative coordinate system stack
+	drawer   *Drawer   // image drawer
 	lexer    *Lexer    // lexer
 	backup   []Token   // token backup
 	commands []Command // list of commands
@@ -43,11 +33,8 @@ type Parser struct {
 
 // NewParser returns a new parser
 func NewParser() *Parser {
-	cs := NewStack()
 	return &Parser{
-		frame:      NewImage(DefaultHeight, DefaultWidth),
-		em:         NewMatrix(4, 0),
-		cs:         cs,
+		drawer:     NewDrawer(DefaultHeight, DefaultWidth),
 		backup:     make([]Token, 0, 50),
 		isAnimated: false,
 		symbols:    NewSymbolTable(),
@@ -290,7 +277,7 @@ func (p *Parser) process() error {
 						return err
 					}
 				}
-				err = p.move(x, y, z)
+				err = p.drawer.Move(x, y, z)
 			case ScaleCommand:
 				c := command.(ScaleCommand)
 				x, y, z := c.args[0], c.args[1], c.args[2]
@@ -303,7 +290,7 @@ func (p *Parser) process() error {
 						return err
 					}
 				}
-				err = p.scale(x, y, z)
+				err = p.drawer.Scale(x, y, z)
 			case RotateCommand:
 				c := command.(RotateCommand)
 				degrees := c.degrees
@@ -314,34 +301,28 @@ func (p *Parser) process() error {
 						return err
 					}
 				}
-				err = p.rotate(c.axis, degrees)
+				err = p.drawer.Rotate(c.axis, degrees)
 			case LineCommand:
 				c := command.(LineCommand)
-				err = p.line(c.p1[0], c.p1[1], c.p1[2], c.p2[0], c.p2[1], c.p2[2])
+				err = p.drawer.Line(c.p1[0], c.p1[1], c.p1[2], c.p2[0], c.p2[1], c.p2[2])
 			case SphereCommand:
 				c := command.(SphereCommand)
-				err = p.sphere(c.center[0], c.center[1], c.center[2], c.radius)
+				err = p.drawer.Sphere(c.center[0], c.center[1], c.center[2], c.radius)
 			case TorusCommand:
 				c := command.(TorusCommand)
-				err = p.torus(c.center[0], c.center[1], c.center[2], c.r1, c.r2)
+				err = p.drawer.Torus(c.center[0], c.center[1], c.center[2], c.r1, c.r2)
 			case BoxCommand:
 				c := command.(BoxCommand)
-				err = p.box(c.p1[0], c.p1[1], c.p1[2], c.width, c.height, c.depth)
+				err = p.drawer.Box(c.p1[0], c.p1[1], c.p1[2], c.width, c.height, c.depth)
 			case PopCommand:
-				p.cs.Pop()
+				p.drawer.Pop()
 			case PushCommand:
-				var new *Matrix
-				if p.cs.IsEmpty() {
-					new = IdentityMatrix(4)
-				} else {
-					new = p.cs.Peek().Copy()
-				}
-				p.cs.Push(new)
+				p.drawer.Push()
 			case SaveCommand:
 				c := command.(SaveCommand)
-				err = p.save(c.filename)
+				err = p.drawer.Save(c.filename)
 			case DisplayCommand:
-				err = p.display()
+				err = p.drawer.Display()
 			case SetCommand:
 				c := command.(SetCommand)
 				p.symbols.Set(c.name, c.value)
@@ -358,11 +339,11 @@ func (p *Parser) process() error {
 		elapsed := time.Since(start)
 		if p.isAnimated {
 			fmt.Printf(" - %s\n", elapsed)
-			err = p.save(fmt.Sprintf(p.formatString, frame))
+			err = p.drawer.Save(fmt.Sprintf(p.formatString, frame))
 			if err != nil {
 				return err
 			}
-			p.reset()
+			p.drawer.Reset()
 		}
 	}
 	if p.isAnimated {
@@ -451,137 +432,4 @@ func (p *Parser) expect(tt TokenType) error {
 		return fmt.Errorf("expected %v, got %v", tt, other)
 	}
 	return nil
-}
-
-func (p *Parser) line(x0, y0, z0, x1, y1, z1 float64) error {
-	p.em.AddEdge(x0, y0, z0, x1, y1, z1)
-	err := p.apply(DrawLineMode)
-	return err
-}
-
-func (p *Parser) scale(sx, sy, sz float64) error {
-	dilation := MakeDilation(sx, sy, sz)
-
-	top := p.cs.Pop()
-	top, err := top.Multiply(dilation)
-	if err != nil {
-		return err
-	}
-	p.cs.Push(top)
-	return nil
-}
-
-func (p *Parser) move(x, y, z float64) error {
-	translation := MakeTranslation(x, y, z)
-	top := p.cs.Pop()
-	top, err := top.Multiply(translation)
-	if err != nil {
-		return err
-	}
-	p.cs.Push(top)
-	return nil
-}
-
-func (p *Parser) rotate(axis string, theta float64) error {
-	var rotation *Matrix
-	switch axis {
-	case "x":
-		rotation = MakeRotX(theta)
-	case "y":
-		rotation = MakeRotY(theta)
-	case "z":
-		rotation = MakeRotZ(theta)
-	default:
-		return errors.New("axis must be \"x\", \"y\", or \"z\"")
-	}
-
-	top := p.cs.Pop()
-	top, err := top.Multiply(rotation)
-	if err != nil {
-		return err
-	}
-	p.cs.Push(top)
-	return nil
-}
-
-func (p *Parser) apply(mode DrawingMode) error {
-	product, err := p.cs.Peek().Multiply(p.em)
-	if err != nil {
-		return err
-	}
-	p.em = product
-	if err := p.draw(mode); err != nil {
-		return err
-	}
-	p.clear()
-	return nil
-}
-
-func (p *Parser) draw(mode DrawingMode) error {
-	var err error
-	switch mode {
-	case DrawLineMode:
-		err = p.frame.DrawLines(p.em, White)
-	case DrawPolygonMode:
-		err = p.frame.DrawPolygons(p.em, White)
-	default:
-		err = fmt.Errorf("undefined draw mode %s", mode)
-	}
-	return err
-}
-
-func (p *Parser) save(filename string) error {
-	err := p.frame.Save(filename)
-	return err
-}
-
-func (p *Parser) display() error {
-	err := p.frame.Display()
-	return err
-}
-
-func (p *Parser) circle(cx, cy, cz, radius float64) error {
-	p.em.AddCircle(cx, cy, cz, radius)
-	err := p.apply(DrawLineMode)
-	return err
-}
-
-func (p *Parser) hermite(x0, y0, x1, y1, dx0, dy0, dx1, dy1 float64) error {
-	p.em.AddHermite(x0, y0, x1, y1, dx0, dy0, dx1, dy1)
-	err := p.apply(DrawLineMode)
-	return err
-}
-
-func (p *Parser) bezier(x0, y0, x1, y1, x2, y2, x3, y3 float64) error {
-	p.em.AddBezier(x0, y0, x1, y1, x2, y2, x3, y3)
-	err := p.apply(DrawLineMode)
-	return err
-}
-
-func (p *Parser) box(x, y, z, width, height, depth float64) error {
-	p.em.AddBox(x, y, z, width, height, depth)
-	err := p.apply(DrawPolygonMode)
-	return err
-}
-
-func (p *Parser) clear() {
-	p.em = NewMatrix(4, 0)
-}
-
-func (p *Parser) sphere(cx, cy, cz, radius float64) error {
-	p.em.AddSphere(cx, cy, cz, radius)
-	err := p.apply(DrawPolygonMode)
-	return err
-}
-
-func (p *Parser) torus(cx, cy, cz, r1, r2 float64) error {
-	p.em.AddTorus(cx, cy, cz, r1, r2)
-	err := p.apply(DrawPolygonMode)
-	return err
-}
-
-func (p *Parser) reset() {
-	p.clear()
-	p.cs = NewStack()
-	p.frame.Fill(Black)
 }
