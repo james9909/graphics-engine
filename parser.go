@@ -78,7 +78,7 @@ func (p *Parser) ParseString(input string) error {
 func (p *Parser) parse() ([]Command, error) {
 	commands := make([]Command, 0, 50)
 	for {
-		t := p.next()
+		t := p.nextToken()
 		switch t.tt {
 		case tError:
 			return nil, errors.New(t.value)
@@ -98,7 +98,7 @@ func (p *Parser) parse() ([]Command, error) {
 				c := MoveCommand{}
 				c.args = []float64{p.nextFloat(), p.nextFloat(), p.nextFloat()}
 				if p.peek().tt == tString {
-					c.knob = p.next().value
+					c.knob = p.nextToken().value
 					p.symbols.Set(c.knob, 0)
 				}
 				command = c
@@ -106,7 +106,7 @@ func (p *Parser) parse() ([]Command, error) {
 				c := ScaleCommand{}
 				c.args = []float64{p.nextFloat(), p.nextFloat(), p.nextFloat()}
 				if p.peek().tt == tString {
-					c.knob = p.next().value
+					c.knob = p.nextToken().value
 					p.symbols.Set(c.knob, 0)
 				}
 				command = c
@@ -115,58 +115,58 @@ func (p *Parser) parse() ([]Command, error) {
 				c.axis = p.nextIdent()
 				c.degrees = p.nextFloat()
 				if p.peek().tt == tString {
-					c.knob = p.next().value
+					c.knob = p.nextToken().value
 					p.symbols.Set(c.knob, 0)
 				}
 				command = c
 			case LINE:
 				c := LineCommand{}
 				if p.peek().tt == tString {
-					c.constants = p.next().value
+					c.constants = p.nextToken().value
 				}
 				c.p1 = []float64{p.nextFloat(), p.nextFloat(), p.nextFloat()}
 				if p.peek().tt == tString {
-					c.cs = p.next().value
+					c.cs = p.nextToken().value
 				}
 				c.p2 = []float64{p.nextFloat(), p.nextFloat(), p.nextFloat()}
 				if p.peek().tt == tString {
-					c.cs2 = p.next().value
+					c.cs2 = p.nextToken().value
 				}
 				command = c
 			case SPHERE:
 				c := SphereCommand{}
 				if p.peek().tt == tString {
-					c.constants = p.next().value
+					c.constants = p.nextToken().value
 				}
 				c.center = []float64{p.nextFloat(), p.nextFloat(), p.nextFloat()}
 				c.radius = p.nextFloat()
 				if p.peek().tt == tString {
-					c.cs = p.next().value
+					c.cs = p.nextToken().value
 				}
 				command = c
 			case TORUS:
 				c := TorusCommand{}
 				if p.peek().tt == tString {
-					c.constants = p.next().value
+					c.constants = p.nextToken().value
 				}
 				c.center = []float64{p.nextFloat(), p.nextFloat(), p.nextFloat()}
 				c.r1 = p.nextFloat()
 				c.r2 = p.nextFloat()
 				if p.peek().tt == tString {
-					c.cs = p.next().value
+					c.cs = p.nextToken().value
 				}
 				command = c
 			case BOX:
 				c := BoxCommand{}
 				if p.peek().tt == tString {
-					c.constants = p.next().value
+					c.constants = p.nextToken().value
 				}
 				c.p1 = []float64{p.nextFloat(), p.nextFloat(), p.nextFloat()}
 				c.width = p.nextFloat()
 				c.height = p.nextFloat()
 				c.depth = p.nextFloat()
 				if p.peek().tt == tString {
-					c.cs = p.next().value
+					c.cs = p.nextToken().value
 				}
 				command = c
 			case POP:
@@ -361,8 +361,8 @@ func (p *Parser) getSymbolValue(symbolName string) (float64, error) {
 	}
 }
 
-// next returns the next token from the lexer
-func (p *Parser) next() Token {
+// nextToken returns the nextToken token from the lexer
+func (p *Parser) nextToken() Token {
 	lenBackup := len(p.backup)
 	// Use the token from backup if it exists
 	if lenBackup > 0 {
@@ -380,7 +380,7 @@ func (p *Parser) nextInt() int {
 	if p.expect(tInt) != nil {
 		panic(fmt.Errorf("expected %v, got %v", tInt, p.peek().tt))
 	}
-	v, _ := strconv.Atoi(p.next().value)
+	v, _ := strconv.Atoi(p.nextToken().value)
 	return v
 }
 
@@ -390,7 +390,7 @@ func (p *Parser) nextFloat() float64 {
 	if p.expect(tInt) != nil && p.expect(tFloat) != nil {
 		panic(fmt.Errorf("expected %v, got %v", tFloat, p.peek().tt))
 	}
-	v, _ := strconv.ParseFloat(p.next().value, 64)
+	v, _ := strconv.ParseFloat(p.nextToken().value, 64)
 	return v
 }
 
@@ -400,7 +400,7 @@ func (p *Parser) nextString() string {
 	if p.expect(tString) != nil {
 		panic(fmt.Errorf("expected %v, got %v", tString, p.peek().tt))
 	}
-	return p.next().value
+	return p.nextToken().value
 }
 
 // nextIdent returns the next identifier from the lexer as a string.
@@ -409,7 +409,7 @@ func (p *Parser) nextIdent() string {
 	if p.expect(tIdent) != nil {
 		panic(fmt.Errorf("expected %v, got %v", tIdent, p.peek().tt))
 	}
-	return p.next().value
+	return p.nextToken().value
 }
 
 // unread adds the token to the list of backup tokens.
