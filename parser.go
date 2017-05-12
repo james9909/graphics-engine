@@ -237,8 +237,9 @@ func (p *Parser) parse() ([]Command, error) {
 			if command != nil {
 				commands = append(commands, command)
 			}
-			if err := p.expect(tNewline); err != nil {
-				return nil, fmt.Errorf("unexpected %v at end of statement", p.peek().tt)
+			next := p.nextToken().tt
+			if next != tNewline {
+				return nil, fmt.Errorf("unexpected %v at end of statement", next)
 			}
 		case tString:
 			return nil, fmt.Errorf("unrecognized identifier: \"%s\"", t.value)
@@ -256,6 +257,7 @@ func (p *Parser) process() error {
 	}
 	var err error
 	for frame := 0; frame < p.frames; frame++ {
+		// Set knob values for the current frame
 		for knob := range p.knobs {
 			p.symbols.Set(knob, p.knobs[knob][frame])
 		}
@@ -379,6 +381,7 @@ func (p *Parser) next(typs ...TokenType) string {
 	next := p.peek()
 	for _, tt := range typs {
 		if next.tt == tt {
+			p.nextToken()
 			return next.value
 		}
 	}
