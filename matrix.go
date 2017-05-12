@@ -403,16 +403,20 @@ func (m *Matrix) AddTorus(cx, cy, cz, r1, r2 float64) {
 	endLatitude := steps - 1
 	endLongitude := steps - 1
 	for latitude := 0; latitude < endLatitude; latitude++ {
+		start := latitude * steps
 		for longitude := 0; longitude < endLongitude; longitude++ {
-			index := latitude*steps + longitude
+			p0 := start + longitude
+			p1 := p0 + 1
+			p2 := p0 + steps
+			p3 := p2 + 1
 			m.AddTriangle(
-				points.Get(0, index), points.Get(1, index), points.Get(2, index),
-				points.Get(0, index+1), points.Get(1, index+1), points.Get(2, index+1),
-				points.Get(0, index+steps), points.Get(1, index+steps), points.Get(2, index+steps))
+				points.Get(0, p0), points.Get(1, p0), points.Get(2, p0),
+				points.Get(0, p1), points.Get(1, p1), points.Get(2, p1),
+				points.Get(0, p2), points.Get(1, p2), points.Get(2, p2))
 			m.AddTriangle(
-				points.Get(0, index+steps+1), points.Get(1, index+steps+1), points.Get(2, index+steps+1),
-				points.Get(0, index+steps), points.Get(1, index+steps), points.Get(2, index+steps),
-				points.Get(0, index+1), points.Get(1, index+1), points.Get(2, index+1))
+				points.Get(0, p3), points.Get(1, p3), points.Get(2, p3),
+				points.Get(0, p2), points.Get(1, p2), points.Get(2, p2),
+				points.Get(0, p1), points.Get(1, p1), points.Get(2, p1))
 		}
 	}
 }
