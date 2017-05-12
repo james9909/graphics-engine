@@ -113,3 +113,20 @@ type BoxCommand struct {
 func (c BoxCommand) Name() string {
 	return "BOX"
 }
+
+type SetCommand struct {
+	name  string
+	value float64
+}
+
+func (c SetCommand) Name() string {
+	return "SET"
+}
+
+type SetAllCommand struct {
+	value float64
+}
+
+func (c SetAllCommand) Name() string {
+	return "SETALL"
+}

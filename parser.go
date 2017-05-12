@@ -37,7 +37,8 @@ type Parser struct {
 	frames       int                  // number of frames in the animation
 	basename     string               // animation basename
 	formatString string               // format string for each frame of the animation
-	knobs        map[string][]float64 // knob symbol table
+	symbols      *SymbolTable         // symbol table
+	knobs        map[string][]float64 // knob table
 }
 
 // NewParser returns a new parser
@@ -49,6 +50,7 @@ func NewParser() *Parser {
 		cs:         cs,
 		backup:     make([]Token, 0, 50),
 		isAnimated: false,
+		symbols:    NewSymbolTable(),
 		knobs:      make(map[string][]float64),
 	}
 }
@@ -110,6 +112,7 @@ func (p *Parser) parse() ([]Command, error) {
 				c.args = []float64{p.nextFloat(), p.nextFloat(), p.nextFloat()}
 				if p.peek().tt == tString {
 					c.knob = p.next().value
+					p.symbols.Set(c.knob, 0)
 				}
 				command = c
 			case SCALE:
@@ -117,6 +120,7 @@ func (p *Parser) parse() ([]Command, error) {
 				c.args = []float64{p.nextFloat(), p.nextFloat(), p.nextFloat()}
 				if p.peek().tt == tString {
 					c.knob = p.next().value
+					p.symbols.Set(c.knob, 0)
 				}
 				command = c
 			case ROTATE:
@@ -125,6 +129,7 @@ func (p *Parser) parse() ([]Command, error) {
 				c.degrees = p.nextFloat()
 				if p.peek().tt == tString {
 					c.knob = p.next().value
+					p.symbols.Set(c.knob, 0)
 				}
 				command = c
 			case LINE:
@@ -230,6 +235,17 @@ func (p *Parser) parse() ([]Command, error) {
 					return nil, errors.New("number of frames must be greater than zero")
 				}
 				p.isAnimated = true
+			case SET:
+				c := SetCommand{
+					name:  p.nextString(),
+					value: p.nextFloat(),
+				}
+				command = c
+			case SETALL:
+				c := SetAllCommand{
+					value: p.nextFloat(),
+				}
+				command = c
 			}
 			if command != nil {
 				commands = append(commands, command)
@@ -253,6 +269,9 @@ func (p *Parser) process() error {
 	}
 	var err error
 	for frame := 0; frame < p.frames; frame++ {
+		for knob := range p.knobs {
+			p.symbols.Set(knob, p.knobs[knob][frame])
+		}
 		if p.isAnimated {
 			fmt.Printf("Rendering frame %d/%d", frame+1, p.frames)
 		}
@@ -263,7 +282,7 @@ func (p *Parser) process() error {
 				c := command.(MoveCommand)
 				x, y, z := c.args[0], c.args[1], c.args[2]
 				if c.knob != "" {
-					if knob, err := p.getKnobValue(c.knob, frame); err == nil {
+					if knob, err := p.getSymbolValue(c.knob); err == nil {
 						x *= knob
 						y *= knob
 						z *= knob
@@ -276,7 +295,7 @@ func (p *Parser) process() error {
 				c := command.(ScaleCommand)
 				x, y, z := c.args[0], c.args[1], c.args[2]
 				if c.knob != "" {
-					if knob, err := p.getKnobValue(c.knob, frame); err == nil {
+					if knob, err := p.getSymbolValue(c.knob); err == nil {
 						x *= knob
 						y *= knob
 						z *= knob
@@ -289,7 +308,7 @@ func (p *Parser) process() error {
 				c := command.(RotateCommand)
 				degrees := c.degrees
 				if c.knob != "" {
-					if knob, err := p.getKnobValue(c.knob, frame); err == nil {
+					if knob, err := p.getSymbolValue(c.knob); err == nil {
 						degrees *= knob
 					} else {
 						return err
@@ -323,6 +342,14 @@ func (p *Parser) process() error {
 				err = p.save(c.filename)
 			case DisplayCommand:
 				err = p.display()
+			case SetCommand:
+				c := command.(SetCommand)
+				p.symbols.Set(c.name, c.value)
+			case SetAllCommand:
+				c := command.(SetAllCommand)
+				for key := range p.symbols.table {
+					p.symbols.Set(key, c.value)
+				}
 			}
 			if err != nil {
 				return err
@@ -345,14 +372,11 @@ func (p *Parser) process() error {
 	return err
 }
 
-func (p *Parser) getKnobValue(knobName string, frame int) (float64, error) {
-	if knob, knobFound := p.knobs[knobName]; knobFound {
-		if frame >= len(knob) {
-			return 0, fmt.Errorf("knob '%s' is undefined for frame %d", knobName, frame)
-		}
-		return knob[frame], nil
+func (p *Parser) getSymbolValue(symbolName string) (float64, error) {
+	if value, found := p.symbols.Get(symbolName); found {
+		return value, nil
 	} else {
-		return 0, fmt.Errorf("undefined knob '%s'", knobName)
+		return 0, fmt.Errorf("undefined symbol '%s'", symbolName)
 	}
 }
 

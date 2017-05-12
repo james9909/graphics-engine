@@ -41,6 +41,8 @@ const (
 	VARY
 	BASENAME
 	FRAMES
+	SET
+	SETALL
 	keywordEnd
 )
 
@@ -76,6 +78,8 @@ var tokens = map[TokenType]string{
 	VARY:     "vary",
 	BASENAME: "basename",
 	FRAMES:   "frames",
+	SET:      "set",
+	SETALL:   "setall",
 }
 
 var keywords map[string]TokenType
