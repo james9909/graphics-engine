@@ -524,6 +524,8 @@ func (p *Parser) draw(mode DrawingMode) error {
 		err = p.frame.DrawLines(p.em, White)
 	case DrawPolygonMode:
 		err = p.frame.DrawPolygons(p.em, White)
+	default:
+		err = fmt.Errorf("undefined draw mode %s", mode)
 	}
 	return err
 }
