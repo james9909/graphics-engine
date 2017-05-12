@@ -350,36 +350,40 @@ func (m *Matrix) AddSphere(cx, cy, cz, radius float64) {
 	steps := int(1.0/CircularStepSize) + 1
 	endLatitude := steps - 1
 	endLongitude := steps - 1
+	modulus := points.cols
 	for latitude := 0; latitude < endLatitude; latitude++ {
-		latitudeStart := latitude * steps
-		nextLatitudeStart := latitudeStart + steps
+		start := latitude * steps
+		nextStart := (start + steps) % modulus
 		for longitude := 0; longitude < endLongitude; longitude++ {
-			index := latitudeStart + longitude
-			indexNextLatitude := nextLatitudeStart + longitude
+			p0 := start + longitude
+			p1 := p0 + 1
+			p2 := nextStart + longitude
+			p3 := p2 + 1
+
 			if longitude > 0 {
 				m.AddTriangle(
-					points.Get(0, index), points.Get(1, index), points.Get(2, index),
-					points.Get(0, index+1), points.Get(1, index+1), points.Get(2, index+1),
-					points.Get(0, indexNextLatitude), points.Get(1, indexNextLatitude), points.Get(2, indexNextLatitude))
+					points.Get(0, p0), points.Get(1, p0), points.Get(2, p0),
+					points.Get(0, p3), points.Get(1, p3), points.Get(2, p3),
+					points.Get(0, p2), points.Get(1, p2), points.Get(2, p2))
 			}
-			// Don't draw the triangles at the end pole of the sphere
-			if longitude < endLongitude-1 {
+			if longitude != endLongitude-1 {
 				m.AddTriangle(
-					points.Get(0, index+1), points.Get(1, index+1), points.Get(2, index+1),
-					points.Get(0, indexNextLatitude+1), points.Get(1, indexNextLatitude+1), points.Get(2, indexNextLatitude+1),
-					points.Get(0, indexNextLatitude), points.Get(1, indexNextLatitude), points.Get(2, indexNextLatitude))
+					points.Get(0, p3), points.Get(1, p3), points.Get(2, p3),
+					points.Get(0, p0), points.Get(1, p0), points.Get(2, p0),
+					points.Get(0, p1), points.Get(1, p1), points.Get(2, p1))
 			}
 		}
 	}
 }
 
 func (m *Matrix) generateSphere(cx, cy, cz, radius float64) {
-	for r := 0.0; r < 1+CircularStepSize; r += CircularStepSize {
-		phi := 2 * math.Pi * r
+	steps := float64(int(1.0 / CircularStepSize))
+	for r := 0.0; r < steps; r++ {
+		phi := math.Pi * (2 * r / steps)
 		rCosPhi := radius * math.Cos(phi)
 		rSinPhi := radius * math.Sin(phi)
-		for c := 0.0; c < 1+CircularStepSize; c += CircularStepSize {
-			theta := math.Pi * c
+		for c := 0.0; c <= steps; c++ {
+			theta := math.Pi * (c / steps)
 			cosTheta := math.Cos(theta)
 			sinTheta := math.Sin(theta)
 
