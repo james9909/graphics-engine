@@ -399,22 +399,26 @@ func (m *Matrix) generateSphere(cx, cy, cz, radius float64) {
 func (m *Matrix) AddTorus(cx, cy, cz, r1, r2 float64) {
 	points := NewMatrix(4, 0)
 	points.generateTorus(cx, cy, cz, r1, r2)
-	steps := int(1.0/CircularStepSize) + 1
-	endLatitude := steps - 1
-	endLongitude := steps - 1
+	steps := int(1.0 / CircularStepSize)
+	endLatitude := steps
+	endLongitude := steps
+	modulus := points.cols
 	for latitude := 0; latitude < endLatitude; latitude++ {
 		start := latitude * steps
 		for longitude := 0; longitude < endLongitude; longitude++ {
 			p0 := start + longitude
 			p1 := p0 + 1
-			p2 := p0 + steps
-			p3 := p2 + 1
+			if longitude == endLongitude-1 {
+				p1 = p0 - longitude
+			}
+			p2 := (p1 + steps) % modulus
+			p3 := (p0 + steps) % modulus
 			m.AddTriangle(
 				points.Get(0, p0), points.Get(1, p0), points.Get(2, p0),
-				points.Get(0, p1), points.Get(1, p1), points.Get(2, p1),
+				points.Get(0, p3), points.Get(1, p3), points.Get(2, p3),
 				points.Get(0, p2), points.Get(1, p2), points.Get(2, p2))
 			m.AddTriangle(
-				points.Get(0, p3), points.Get(1, p3), points.Get(2, p3),
+				points.Get(0, p0), points.Get(1, p0), points.Get(2, p0),
 				points.Get(0, p2), points.Get(1, p2), points.Get(2, p2),
 				points.Get(0, p1), points.Get(1, p1), points.Get(2, p1))
 		}
@@ -422,12 +426,13 @@ func (m *Matrix) AddTorus(cx, cy, cz, r1, r2 float64) {
 }
 
 func (m *Matrix) generateTorus(cx, cy, cz, r1, r2 float64) {
-	for r := 0.0; r < 1; r += CircularStepSize {
-		phi := 2 * math.Pi * r
+	steps := float64(int(1.0 / CircularStepSize))
+	for r := 0.0; r < steps; r++ {
+		phi := math.Pi * (2 * r / steps)
 		cosPhi := math.Cos(phi)
 		sinPhi := math.Sin(phi)
-		for c := 0.0; c < 1; c += CircularStepSize {
-			theta := 2 * math.Pi * c
+		for c := 0.0; c < steps; c++ {
+			theta := math.Pi * (2 * c / steps)
 			cosTheta := math.Cos(theta)
 			sinTheta := math.Sin(theta)
 
