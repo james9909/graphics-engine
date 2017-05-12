@@ -422,11 +422,11 @@ func (m *Matrix) AddTorus(cx, cy, cz, r1, r2 float64) {
 }
 
 func (m *Matrix) generateTorus(cx, cy, cz, r1, r2 float64) {
-	for r := 0.0; r < 1+CircularStepSize; r += CircularStepSize {
+	for r := 0.0; r < 1; r += CircularStepSize {
 		phi := 2 * math.Pi * r
 		cosPhi := math.Cos(phi)
 		sinPhi := math.Sin(phi)
-		for c := 0.0; c < 1+CircularStepSize; c += CircularStepSize {
+		for c := 0.0; c < 1; c += CircularStepSize {
 			theta := 2 * math.Pi * c
 			cosTheta := math.Cos(theta)
 			sinTheta := math.Sin(theta)
