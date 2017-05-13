@@ -109,7 +109,7 @@ func (image *Image) DrawLine(x1, y1, x2, y2 int, c Color) {
 	}
 }
 
-func (image Image) drawOctant1(x1, y1, x2, y2, A, B int, c Color) {
+func (image *Image) drawOctant1(x1, y1, x2, y2, A, B int, c Color) {
 	d := A + B/2
 	for x1 <= x2 {
 		image.set(x1, y1, c)
@@ -122,7 +122,7 @@ func (image Image) drawOctant1(x1, y1, x2, y2, A, B int, c Color) {
 	}
 }
 
-func (image Image) drawOctant2(x1, y1, x2, y2, A, B int, c Color) {
+func (image *Image) drawOctant2(x1, y1, x2, y2, A, B int, c Color) {
 	d := A/2 + B
 	for y1 <= y2 {
 		image.set(x1, y1, c)
@@ -135,7 +135,7 @@ func (image Image) drawOctant2(x1, y1, x2, y2, A, B int, c Color) {
 	}
 }
 
-func (image Image) drawOctant7(x1, y1, x2, y2, A, B int, c Color) {
+func (image *Image) drawOctant7(x1, y1, x2, y2, A, B int, c Color) {
 	d := A/2 + B
 	for y1 >= y2 {
 		image.set(x1, y1, c)
@@ -148,7 +148,7 @@ func (image Image) drawOctant7(x1, y1, x2, y2, A, B int, c Color) {
 	}
 }
 
-func (image Image) drawOctant8(x1, y1, x2, y2, A, B int, c Color) {
+func (image *Image) drawOctant8(x1, y1, x2, y2, A, B int, c Color) {
 	d := A - B/2
 	for x1 <= x2 {
 		image.set(x1, y1, c)
@@ -162,7 +162,7 @@ func (image Image) drawOctant8(x1, y1, x2, y2, A, B int, c Color) {
 }
 
 // Fill completely fills the Image with a single color
-func (image Image) Fill(c Color) {
+func (image *Image) Fill(c Color) {
 	for y := 0; y < image.height; y++ {
 		for x := 0; x < image.width; x++ {
 			image.set(x, y, c)
@@ -170,7 +170,7 @@ func (image Image) Fill(c Color) {
 	}
 }
 
-func (image Image) set(x, y int, c Color) error {
+func (image *Image) set(x, y int, c Color) error {
 	if x < 0 || x >= image.width {
 		return errors.New("invalid x coordinate")
 	}
