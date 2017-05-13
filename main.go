@@ -1,6 +1,9 @@
 package main
 
-import "os"
+import (
+	"fmt"
+	"os"
+)
 
 func main() {
 	parser := NewParser()
@@ -11,6 +14,7 @@ func main() {
 		err = parser.ParseFile(os.Args[1])
 	}
 	if err != nil {
-		panic(err)
+		fmt.Fprintln(os.Stderr, "Parse error:", err)
+		os.Exit(1)
 	}
 }
