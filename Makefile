@@ -1,5 +1,7 @@
+FLAGS=-ldflags '-s -w'
+
 build:
-	go build -o main
+	go build $(FLAGS) -o main
 
 run:
 	./main script.mdl
