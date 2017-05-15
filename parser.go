@@ -95,24 +95,18 @@ func (p *Parser) parse() ([]Command, error) {
 			case MOVE:
 				c := MoveCommand{}
 				c.args = []float64{p.nextFloat(), p.nextFloat(), p.nextFloat()}
-				if p.peek().tt == tString {
-					c.knob = p.nextToken().value
-				}
+				c.knob, _ = p.next(tString)
 				command = c
 			case SCALE:
 				c := ScaleCommand{}
 				c.args = []float64{p.nextFloat(), p.nextFloat(), p.nextFloat()}
-				if p.peek().tt == tString {
-					c.knob = p.nextToken().value
-				}
+				c.knob, _ = p.next(tString)
 				command = c
 			case ROTATE:
 				c := RotateCommand{}
 				c.axis = p.nextIdent()
 				c.degrees = p.nextFloat()
-				if p.peek().tt == tString {
-					c.knob = p.nextToken().value
-				}
+				c.knob, _ = p.next(tString)
 				command = c
 			case LINE:
 				c := LineCommand{}
