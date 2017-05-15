@@ -232,78 +232,8 @@ func (p *Parser) process() error {
 			fmt.Printf("Rendering frame %d/%d", frame+1, p.frames)
 		}
 		start := time.Now()
-		for _, command := range p.commands {
-			switch command.(type) {
-			case MoveCommand:
-				c := command.(MoveCommand)
-				x, y, z := c.args[0], c.args[1], c.args[2]
-				if c.knob != "" {
-					if knob, err := p.getKnob(c.knob, frame); err == nil {
-						x *= knob
-						y *= knob
-						z *= knob
-					} else {
-						return err
-					}
-				}
-				err = p.drawer.Move(x, y, z)
-			case ScaleCommand:
-				c := command.(ScaleCommand)
-				x, y, z := c.args[0], c.args[1], c.args[2]
-				if c.knob != "" {
-					if knob, err := p.getKnob(c.knob, frame); err == nil {
-						x *= knob
-						y *= knob
-						z *= knob
-					} else {
-						return err
-					}
-				}
-				err = p.drawer.Scale(x, y, z)
-			case RotateCommand:
-				c := command.(RotateCommand)
-				degrees := c.degrees
-				if c.knob != "" {
-					if knob, err := p.getKnob(c.knob, frame); err == nil {
-						degrees *= knob
-					} else {
-						return err
-					}
-				}
-				err = p.drawer.Rotate(c.axis, degrees)
-			case LineCommand:
-				c := command.(LineCommand)
-				err = p.drawer.Line(c.p1[0], c.p1[1], c.p1[2], c.p2[0], c.p2[1], c.p2[2])
-			case SphereCommand:
-				c := command.(SphereCommand)
-				err = p.drawer.Sphere(c.center[0], c.center[1], c.center[2], c.radius)
-			case TorusCommand:
-				c := command.(TorusCommand)
-				err = p.drawer.Torus(c.center[0], c.center[1], c.center[2], c.r1, c.r2)
-			case BoxCommand:
-				c := command.(BoxCommand)
-				err = p.drawer.Box(c.p1[0], c.p1[1], c.p1[2], c.width, c.height, c.depth)
-			case PopCommand:
-				p.drawer.Pop()
-			case PushCommand:
-				p.drawer.Push()
-			case SaveCommand:
-				c := command.(SaveCommand)
-				err = p.drawer.Save(c.filename)
-			case DisplayCommand:
-				err = p.drawer.Display()
-			case SetCommand:
-				c := command.(SetCommand)
-				p.knobs[c.name][frame] = c.value
-			case SetKnobsCommand:
-				c := command.(SetKnobsCommand)
-				for key := range p.knobs {
-					p.knobs[key][frame] = c.value
-				}
-			}
-			if err != nil {
-				return err
-			}
+		if err := p.renderFrame(frame); err != nil {
+			return err
 		}
 		elapsed := time.Since(start)
 		if p.isAnimated {
@@ -318,6 +248,84 @@ func (p *Parser) process() error {
 	if p.isAnimated {
 		fmt.Println("Making animation...")
 		err = MakeAnimation(p.basename)
+	}
+	return err
+}
+
+func (p *Parser) renderFrame(frame int) error {
+	var err error
+	for _, command := range p.commands {
+		switch command.(type) {
+		case MoveCommand:
+			c := command.(MoveCommand)
+			x, y, z := c.args[0], c.args[1], c.args[2]
+			if c.knob != "" {
+				if knob, err := p.getKnob(c.knob, frame); err == nil {
+					x *= knob
+					y *= knob
+					z *= knob
+				} else {
+					return err
+				}
+			}
+			err = p.drawer.Move(x, y, z)
+		case ScaleCommand:
+			c := command.(ScaleCommand)
+			x, y, z := c.args[0], c.args[1], c.args[2]
+			if c.knob != "" {
+				if knob, err := p.getKnob(c.knob, frame); err == nil {
+					x *= knob
+					y *= knob
+					z *= knob
+				} else {
+					return err
+				}
+			}
+			err = p.drawer.Scale(x, y, z)
+		case RotateCommand:
+			c := command.(RotateCommand)
+			degrees := c.degrees
+			if c.knob != "" {
+				if knob, err := p.getKnob(c.knob, frame); err == nil {
+					degrees *= knob
+				} else {
+					return err
+				}
+			}
+			err = p.drawer.Rotate(c.axis, degrees)
+		case LineCommand:
+			c := command.(LineCommand)
+			err = p.drawer.Line(c.p1[0], c.p1[1], c.p1[2], c.p2[0], c.p2[1], c.p2[2])
+		case SphereCommand:
+			c := command.(SphereCommand)
+			err = p.drawer.Sphere(c.center[0], c.center[1], c.center[2], c.radius)
+		case TorusCommand:
+			c := command.(TorusCommand)
+			err = p.drawer.Torus(c.center[0], c.center[1], c.center[2], c.r1, c.r2)
+		case BoxCommand:
+			c := command.(BoxCommand)
+			err = p.drawer.Box(c.p1[0], c.p1[1], c.p1[2], c.width, c.height, c.depth)
+		case PopCommand:
+			p.drawer.Pop()
+		case PushCommand:
+			p.drawer.Push()
+		case SaveCommand:
+			c := command.(SaveCommand)
+			err = p.drawer.Save(c.filename)
+		case DisplayCommand:
+			err = p.drawer.Display()
+		case SetCommand:
+			c := command.(SetCommand)
+			p.knobs[c.name][frame] = c.value
+		case SetKnobsCommand:
+			c := command.(SetKnobsCommand)
+			for key := range p.knobs {
+				p.knobs[key][frame] = c.value
+			}
+		}
+		if err != nil {
+			return err
+		}
 	}
 	return err
 }
