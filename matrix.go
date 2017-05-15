@@ -38,7 +38,7 @@ func (m Matrix) String() string {
 func NewMatrix(rows, cols int) *Matrix {
 	data := make([][]float64, rows)
 	for i := 0; i < rows; i++ {
-		data[i] = make([]float64, cols, cols)
+		data[i] = make([]float64, cols)
 	}
 	return &Matrix{
 		data: data,
