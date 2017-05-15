@@ -1,0 +1,20 @@
+frames 30
+basename ball_ring
+push
+    push
+        move 250 250 0
+        push
+            rotate z 75
+            rotate x 1 spinny
+            sphere 0 0 0 70
+        pop
+        push
+            rotate z 45
+            rotate x 1 spinny
+            rotate y 1 spinny
+            torus 0 0 0 20 110
+        pop
+    pop
+pop
+
+vary spinny 0 29 0 360

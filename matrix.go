@@ -77,12 +77,12 @@ func (m *Matrix) Copy() *Matrix {
 }
 
 // Get returns the value at a certain row and column in a Matrix
-func (m Matrix) Get(r, c int) float64 {
+func (m *Matrix) Get(r, c int) float64 {
 	return m.data[r][c]
 }
 
 // GetColumn returns a column of the Matrix
-func (m Matrix) GetColumn(c int) []float64 {
+func (m *Matrix) GetColumn(c int) []float64 {
 	col := make([]float64, m.rows)
 	for i := 0; i < m.rows; i++ {
 		col[i] = m.Get(i, c)
@@ -91,7 +91,7 @@ func (m Matrix) GetColumn(c int) []float64 {
 }
 
 // GetMatrix returns a 2D array that represents the matrix
-func (m Matrix) GetMatrix() [][]float64 {
+func (m *Matrix) GetMatrix() [][]float64 {
 	return m.data
 }
 

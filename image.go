@@ -182,7 +182,7 @@ func (image *Image) set(x, y int, c Color) error {
 }
 
 // SavePpm will save the Image as a ppm
-func (image Image) SavePpm(name string) error {
+func (image *Image) SavePpm(name string) error {
 	f, err := os.Create(name)
 	if err != nil {
 		return err
@@ -203,7 +203,7 @@ func (image Image) SavePpm(name string) error {
 }
 
 // Save will save an Image into a given format
-func (image Image) Save(name string) error {
+func (image *Image) Save(name string) error {
 	index := strings.Index(name, ".")
 	extension := ".ppm"
 	if index == -1 {
@@ -230,7 +230,7 @@ func (image Image) Save(name string) error {
 }
 
 // Display displays the Image
-func (image Image) Display() error {
+func (image *Image) Display() error {
 	filename := "tmp.ppm"
 	err := image.SavePpm(filename)
 	if err != nil {
