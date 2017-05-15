@@ -192,11 +192,11 @@ func (image Image) SavePpm(name string) error {
 	w := bufio.NewWriter(f)
 	defer w.Flush()
 
-	fmt.Fprintf(w, "P3 %d %d %d\n", image.width, image.height, 255)
+	fmt.Fprintln(w, "P3", image.width, image.height, 255)
 	for y := 0; y < image.height; y++ {
 		for x := 0; x < image.width; x++ {
 			color := image.frame[image.height-y-1][x]
-			fmt.Fprintf(w, "%d %d %d\n", color.r, color.b, color.g)
+			fmt.Fprintln(w, color.r, color.b, color.g)
 		}
 	}
 	return nil
@@ -219,14 +219,13 @@ func (image Image) Save(name string) error {
 		return err
 	}
 
-	ppm := fmt.Sprintf("%s-tmp.ppm", name)
+	ppm := fmt.Sprint(name, "-tmp.ppm")
 	err := image.SavePpm(ppm)
 	if err != nil {
 		return err
 	}
 	defer os.Remove(ppm)
-	args := []string{ppm, fmt.Sprint(name, extension)}
-	err = exec.Command("convert", args...).Run()
+	err = exec.Command("convert", ppm, fmt.Sprint(name, extension)).Run()
 	return err
 }
 
@@ -239,8 +238,7 @@ func (image Image) Display() error {
 	}
 	defer os.Remove(filename)
 
-	args := []string{filename}
-	err = exec.Command("display", args...).Run()
+	err = exec.Command("display", filename).Run()
 	return err
 }
 
@@ -248,8 +246,7 @@ func (image Image) Display() error {
 func MakeAnimation(basename string) error {
 	path := fmt.Sprintf("%s/%s*", FramesDirectory, basename)
 	gif := fmt.Sprintf("%s.gif", basename)
-	args := []string{"-delay", "3", path, gif}
-	err := exec.Command("convert", args...).Run()
+	err := exec.Command("convert", "-delay", "3", path, gif).Run()
 	return err
 }
 

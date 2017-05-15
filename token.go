@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 )
 
 // TokenType is used for representing different tokens
@@ -101,7 +100,7 @@ func (tt TokenType) String() string {
 	if s, isToken := tokens[tt]; isToken {
 		return s
 	}
-	return "token(" + strconv.Itoa(int(tt)) + ")"
+	return fmt.Sprint("token(", tt, ")")
 }
 
 func (t Token) String() string {
