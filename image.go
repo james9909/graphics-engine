@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bytes"
+	"bufio"
 	"errors"
 	"fmt"
 	"os"
@@ -183,21 +183,23 @@ func (image *Image) set(x, y int, c Color) error {
 
 // SavePpm will save the Image as a ppm
 func (image Image) SavePpm(name string) error {
-	var buffer bytes.Buffer
-	buffer.WriteString(fmt.Sprintf("P3 %d %d %d\n", image.width, image.height, 255))
-	for y := 0; y < image.height; y++ {
-		for x := 0; x < image.width; x++ {
-			color := image.frame[image.height-y-1][x]
-			buffer.WriteString(fmt.Sprintf("%d %d %d\n", color.r, color.b, color.g))
-		}
-	}
-	f, err := os.OpenFile(name, os.O_CREATE|os.O_WRONLY, 0666)
+	f, err := os.Create(name)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
-	_, err = f.WriteString(buffer.String())
-	return err
+
+	w := bufio.NewWriter(f)
+	defer w.Flush()
+
+	fmt.Fprintf(w, "P3 %d %d %d\n", image.width, image.height, 255)
+	for y := 0; y < image.height; y++ {
+		for x := 0; x < image.width; x++ {
+			color := image.frame[image.height-y-1][x]
+			fmt.Fprintf(w, "%d %d %d\n", color.r, color.b, color.g)
+		}
+	}
+	return nil
 }
 
 // Save will save an Image into a given format
