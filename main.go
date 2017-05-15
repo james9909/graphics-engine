@@ -16,7 +16,6 @@ func main() {
 	parser := NewParser()
 
 	if *profile {
-		fmt.Println(*profile)
 		f, err := os.Create("cpu.prof")
 		if err != nil {
 			log.Fatal(err)
