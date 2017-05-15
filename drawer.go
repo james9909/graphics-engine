@@ -167,7 +167,7 @@ func (d *Drawer) Pop() {
 func (d *Drawer) Push() {
 	var new *Matrix
 	if d.cs.IsEmpty() {
-		new = IdentityMatrix(4)
+		new = IdentityMatrix()
 	} else {
 		new = d.cs.Peek().Copy()
 	}

@@ -56,19 +56,15 @@ func NewMatrixFromData(data [][]float64) *Matrix {
 	}
 }
 
-// IdentityMatrix returns an identity matrix
-func IdentityMatrix(size int) *Matrix {
-	m := NewMatrix(size, size)
-	for i := 0; i < size; i++ {
-		for j := 0; j < size; j++ {
-			if i == j {
-				m.data[i][j] = 1
-			} else {
-				m.data[i][j] = 0
-			}
-		}
+// IdentityMatrix returns a 4x4 identity matrix
+func IdentityMatrix() *Matrix {
+	data := [][]float64{
+		{1, 0, 0, 0},
+		{0, 1, 0, 0},
+		{0, 0, 1, 0},
+		{0, 0, 0, 1},
 	}
-	return m
+	return NewMatrixFromData(data)
 }
 
 // Copy returns a copy of a Matrix
