@@ -1,2 +1,5 @@
 main
 frames/
+
+# pprof files
+*.prof
