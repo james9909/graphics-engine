@@ -49,11 +49,11 @@ func NewMatrix(rows, cols int) *Matrix {
 
 // NewMatrixFromData returns a new Matrix with preset data
 func NewMatrixFromData(data [][]float64) *Matrix {
-	m := NewMatrix(len(data), len(data[0]))
-	m.data = data
-	m.rows = len(data)
-	m.cols = len(data[0])
-	return m
+	return &Matrix{
+		data: data,
+		rows: len(data),
+		cols: len(data[0]),
+	}
 }
 
 // IdentityMatrix returns an identity matrix
