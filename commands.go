@@ -12,22 +12,19 @@ func (c SaveCommand) Name() string {
 	return "SAVE"
 }
 
-type DisplayCommand struct {
-}
+type DisplayCommand struct{}
 
 func (c DisplayCommand) Name() string {
 	return "DISPLAY"
 }
 
-type PushCommand struct {
-}
+type PushCommand struct{}
 
 func (c PushCommand) Name() string {
 	return "PUSH"
 }
 
-type PopCommand struct {
-}
+type PopCommand struct{}
 
 func (c PopCommand) Name() string {
 	return "POP"
