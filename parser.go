@@ -199,8 +199,8 @@ func (p *Parser) parse() ([]Command, error) {
 					value: p.nextFloat(),
 				}
 				command = c
-			case SETALL:
-				c := SetAllCommand{
+			case SETKNOBS:
+				c := SetKnobsCommand{
 					value: p.nextFloat(),
 				}
 				command = c
@@ -295,8 +295,8 @@ func (p *Parser) process() error {
 			case SetCommand:
 				c := command.(SetCommand)
 				p.knobs[c.name][frame] = c.value
-			case SetAllCommand:
-				c := command.(SetAllCommand)
+			case SetKnobsCommand:
+				c := command.(SetKnobsCommand)
 				for key := range p.knobs {
 					p.knobs[key][frame] = c.value
 				}

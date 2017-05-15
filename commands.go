@@ -123,10 +123,10 @@ func (c SetCommand) Name() string {
 	return "SET"
 }
 
-type SetAllCommand struct {
+type SetKnobsCommand struct {
 	value float64
 }
 
-func (c SetAllCommand) Name() string {
-	return "SETALL"
+func (c SetKnobsCommand) Name() string {
+	return "SETKNOBS"
 }

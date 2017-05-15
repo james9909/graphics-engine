@@ -41,7 +41,7 @@ const (
 	BASENAME
 	FRAMES
 	SET
-	SETALL
+	SETKNOBS
 	keywordEnd
 )
 
@@ -78,7 +78,7 @@ var tokens = map[TokenType]string{
 	BASENAME: "basename",
 	FRAMES:   "frames",
 	SET:      "set",
-	SETALL:   "setall",
+	SETKNOBS: "setknobs",
 }
 
 var keywords map[string]TokenType
