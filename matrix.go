@@ -143,9 +143,9 @@ func (m *Matrix) AddColumn(column []float64) error {
 // MakeTranslation returns a translation Matrix
 func MakeTranslation(x, y, z float64) *Matrix {
 	data := [][]float64{
-		{1, 0, 0, float64(x)},
-		{0, 1, 0, float64(y)},
-		{0, 0, 1, float64(z)},
+		{1, 0, 0, x},
+		{0, 1, 0, y},
+		{0, 0, 1, z},
 		{0, 0, 0, 1},
 	}
 	m := NewMatrixFromData(data)
