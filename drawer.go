@@ -5,12 +5,12 @@ import (
 	"fmt"
 )
 
-// DrawingMode defines the type of each drawing mode
-type DrawingMode int
+// DrawMode defines the type of each drawing mode
+type DrawMode int
 
 const (
-	DrawLineMode    DrawingMode = iota // DrawLineMode is a draw argument that draws 2D lines onto the Image
-	DrawPolygonMode                    // DrawPolygonMode is a draw argument that draws 3D polygons onto the Image
+	DrawLineMode    DrawMode = iota // DrawLineMode is a draw argument that draws 2D lines onto the Image
+	DrawPolygonMode                 // DrawPolygonMode is a draw argument that draws 3D polygons onto the Image
 )
 
 // Drawer is a struct that draws on an image
@@ -28,7 +28,7 @@ func NewDrawer(height, width int) *Drawer {
 	}
 }
 
-func (d *Drawer) apply(mode DrawingMode) error {
+func (d *Drawer) apply(mode DrawMode) error {
 	product, err := d.cs.Peek().Multiply(d.em)
 	if err != nil {
 		return err
@@ -41,7 +41,7 @@ func (d *Drawer) apply(mode DrawingMode) error {
 	return nil
 }
 
-func (d *Drawer) draw(mode DrawingMode) error {
+func (d *Drawer) draw(mode DrawMode) error {
 	var err error
 	switch mode {
 	case DrawLineMode:
