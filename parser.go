@@ -34,7 +34,7 @@ type Parser struct {
 func NewParser() *Parser {
 	return &Parser{
 		drawer:     NewDrawer(DefaultHeight, DefaultWidth),
-		backup:     make([]Token, 0, 50),
+		backup:     make([]Token, 0, 10),
 		isAnimated: false,
 		knobs:      make(map[string][]float64),
 	}
