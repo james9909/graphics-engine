@@ -170,15 +170,11 @@ func (image *Image) Fill(c Color) {
 	}
 }
 
-func (image *Image) set(x, y int, c Color) error {
-	if x < 0 || x >= image.width {
-		return errors.New("invalid x coordinate")
-	}
-	if y < 0 || y >= image.height {
-		return errors.New("invalid y coordinate")
+func (image *Image) set(x, y int, c Color) {
+	if (x < 0 || x >= image.width) || (y < 0 || y >= image.height) {
+		return
 	}
 	image.frame[y][x] = c
-	return nil
 }
 
 // SavePpm will save the Image as a ppm
