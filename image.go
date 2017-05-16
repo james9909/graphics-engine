@@ -174,6 +174,7 @@ func (image *Image) set(x, y int, c Color) {
 	if (x < 0 || x >= image.width) || (y < 0 || y >= image.height) {
 		return
 	}
+	// Plot so that the y coodinate is the row, and the x coordinate is the column
 	image.frame[y][x] = c
 }
 
@@ -190,8 +191,10 @@ func (image *Image) SavePpm(name string) error {
 
 	fmt.Fprintln(w, "P3", image.width, image.height, 255)
 	for y := 0; y < image.height; y++ {
+		// Adjust y coordinate that the origin is the bottom left
+		adjustedY := image.height - y - 1
 		for x := 0; x < image.width; x++ {
-			color := image.frame[image.height-y-1][x]
+			color := image.frame[adjustedY][x]
 			fmt.Fprintln(w, color.r, color.b, color.g)
 		}
 	}
