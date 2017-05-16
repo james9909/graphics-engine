@@ -13,6 +13,7 @@ const (
 	DrawPolygonMode                    // DrawPolygonMode is a draw argument that draws 3D polygons onto the Image
 )
 
+// Drawer is a struct that draws on an image
 type Drawer struct {
 	frame *Image
 	em    *Matrix
@@ -57,6 +58,7 @@ func (d *Drawer) clear() {
 	d.em = NewMatrix(4, 0)
 }
 
+// Reset clears the image and edge matrix
 func (d *Drawer) Reset() {
 	d.clear()
 	d.cs = NewStack()
