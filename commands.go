@@ -127,3 +127,11 @@ type SetKnobsCommand struct {
 func (c SetKnobsCommand) Name() string {
 	return "SETKNOBS"
 }
+
+type MeshCommand struct {
+	filename string
+}
+
+func (c MeshCommand) Name() string {
+	return "MESH"
+}

@@ -176,3 +176,7 @@ func (d *Drawer) Push() {
 	}
 	d.cs.Push(new)
 }
+
+func (d *Drawer) AddPoint(x, y, z float64) {
+	d.em.AddPoint(x, y, z)
+}

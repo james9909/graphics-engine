@@ -42,6 +42,7 @@ const (
 	FRAMES
 	SET
 	SETKNOBS
+	MESH
 	keywordEnd
 )
 
@@ -79,6 +80,7 @@ var tokens = map[TokenType]string{
 	FRAMES:   "frames",
 	SET:      "set",
 	SETKNOBS: "setknobs",
+	MESH:     "mesh",
 }
 
 var keywords map[string]TokenType

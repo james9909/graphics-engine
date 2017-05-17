@@ -204,6 +204,11 @@ func (p *Parser) parse() ([]Command, error) {
 					value: p.nextFloat(),
 				}
 				command = c
+			case MESH:
+				c := MeshCommand{
+					filename: p.nextString(),
+				}
+				command = c
 			}
 			if command != nil {
 				commands = append(commands, command)
@@ -322,6 +327,22 @@ func (p *Parser) renderFrame(frame int) error {
 			for key := range p.knobs {
 				p.knobs[key][frame] = c.value
 			}
+		case MeshCommand:
+			c := command.(MeshCommand)
+			f, err := os.Open(c.filename)
+			if err != nil {
+				return err
+			}
+			scanner := bufio.NewScanner(f)
+			for scanner.Scan() {
+				// TODO: Legitimize
+				var x, y, z float64
+				num, _ := fmt.Sscanf(scanner.Text(), "vertex %f %f %f", &x, &y, &z)
+				if num == 3 {
+					p.drawer.AddPoint(x, y, z)
+				}
+			}
+			p.drawer.apply(DrawPolygonMode)
 		}
 		if err != nil {
 			return err
