@@ -95,6 +95,7 @@ func (d *Drawer) Move(x, y, z float64) error {
 }
 
 func (d *Drawer) Rotate(axis string, theta float64) error {
+	theta = degreesToRadians(theta)
 	var rotation *Matrix
 	switch axis {
 	case "x":

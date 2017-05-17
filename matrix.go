@@ -169,12 +169,12 @@ func degreesToRadians(degrees float64) float64 {
 }
 
 // MakeRotX returns a rotation matrix for the X axis
+// Rotates clockwise when looking towards the origin
 func MakeRotX(theta float64) *Matrix {
-	theta = degreesToRadians(theta)
 	data := [][]float64{
 		{1, 0, 0, 0},
-		{0, math.Cos(theta), math.Sin(theta), 0},
-		{0, -math.Sin(theta), math.Cos(theta), 0},
+		{0, math.Cos(theta), -math.Sin(theta), 0},
+		{0, math.Sin(theta), math.Cos(theta), 0},
 		{0, 0, 0, 1},
 	}
 	m := NewMatrixFromData(data)
@@ -182,12 +182,12 @@ func MakeRotX(theta float64) *Matrix {
 }
 
 // MakeRotY returns a rotation matrix for the Y axis
+// Rotates clockwise when looking towards the origin
 func MakeRotY(theta float64) *Matrix {
-	theta = degreesToRadians(theta)
 	data := [][]float64{
-		{math.Cos(theta), 0, -math.Sin(theta), 0},
+		{math.Cos(theta), 0, math.Sin(theta), 0},
 		{0, 1, 0, 0},
-		{math.Sin(theta), 0, math.Cos(theta), 0},
+		{-math.Sin(theta), 0, math.Cos(theta), 0},
 		{0, 0, 0, 1},
 	}
 	m := NewMatrixFromData(data)
@@ -195,11 +195,11 @@ func MakeRotY(theta float64) *Matrix {
 }
 
 // MakeRotZ returns a rotation matrix for the Z axis
+// Rotates clockwise when looking towards the origin
 func MakeRotZ(theta float64) *Matrix {
-	theta = degreesToRadians(theta)
 	data := [][]float64{
-		{math.Cos(theta), math.Sin(theta), 0, 0},
-		{-math.Sin(theta), math.Cos(theta), 0, 0},
+		{math.Cos(theta), -math.Sin(theta), 0, 0},
+		{math.Sin(theta), math.Cos(theta), 0, 0},
 		{0, 0, 1, 0},
 		{0, 0, 0, 1},
 	}
