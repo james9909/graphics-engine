@@ -61,7 +61,7 @@ func (image *Image) DrawLines(em *Matrix, c Color) error {
 	for i := 0; i < em.cols-1; i += 2 {
 		p0 := em.GetColumn(i)
 		p1 := em.GetColumn(i + 1)
-		image.DrawLine(int(p0[0]), int(p0[1]), int(p1[0]), int(p1[1]), c)
+		image.DrawLine(p0[0], p0[1], p1[0], p1[1], c)
 	}
 	return nil
 }
@@ -76,16 +76,16 @@ func (image *Image) DrawPolygons(em *Matrix, c Color) error {
 		p1 := em.GetColumn(i + 1)
 		p2 := em.GetColumn(i + 2)
 		if isVisible(p0, p1, p2) {
-			image.DrawLine(int(p0[0]), int(p0[1]), int(p1[0]), int(p1[1]), c)
-			image.DrawLine(int(p1[0]), int(p1[1]), int(p2[0]), int(p2[1]), c)
-			image.DrawLine(int(p2[0]), int(p2[1]), int(p0[0]), int(p0[1]), c)
+			image.DrawLine(p0[0], p0[1], p1[0], p1[1], c)
+			image.DrawLine(p1[0], p1[1], p2[0], p2[1], c)
+			image.DrawLine(p2[0], p2[1], p0[0], p0[1], c)
 		}
 	}
 	return nil
 }
 
 // DrawLine draws a single line onto the Image
-func (image *Image) DrawLine(x1, y1, x2, y2 int, c Color) {
+func (image *Image) DrawLine(x1, y1, x2, y2 float64, c Color) {
 	if x1 > x2 {
 		x1, x2 = x2, x1
 		y1, y2 = y2, y1
@@ -93,7 +93,7 @@ func (image *Image) DrawLine(x1, y1, x2, y2 int, c Color) {
 
 	A := 2 * (y2 - y1)
 	B := 2 * -(x2 - x1)
-	m := float32(A) / float32(-B)
+	m := A / -B
 	if m >= 0 {
 		if m <= 1 {
 			image.drawOctant1(x1, y1, x2, y2, A, B, c)
@@ -109,10 +109,10 @@ func (image *Image) DrawLine(x1, y1, x2, y2 int, c Color) {
 	}
 }
 
-func (image *Image) drawOctant1(x1, y1, x2, y2, A, B int, c Color) {
+func (image *Image) drawOctant1(x1, y1, x2, y2, A, B float64, c Color) {
 	d := A + B/2
 	for x1 <= x2 {
-		image.set(x1, y1, c)
+		image.set(int(x1), int(y1), c)
 		if d > 0 {
 			y1++
 			d += B
@@ -122,10 +122,10 @@ func (image *Image) drawOctant1(x1, y1, x2, y2, A, B int, c Color) {
 	}
 }
 
-func (image *Image) drawOctant2(x1, y1, x2, y2, A, B int, c Color) {
+func (image *Image) drawOctant2(x1, y1, x2, y2, A, B float64, c Color) {
 	d := A/2 + B
 	for y1 <= y2 {
-		image.set(x1, y1, c)
+		image.set(int(x1), int(y1), c)
 		if d < 0 {
 			x1++
 			d += A
@@ -135,10 +135,10 @@ func (image *Image) drawOctant2(x1, y1, x2, y2, A, B int, c Color) {
 	}
 }
 
-func (image *Image) drawOctant7(x1, y1, x2, y2, A, B int, c Color) {
+func (image *Image) drawOctant7(x1, y1, x2, y2, A, B float64, c Color) {
 	d := A/2 + B
 	for y1 >= y2 {
-		image.set(x1, y1, c)
+		image.set(int(x1), int(y1), c)
 		if d > 0 {
 			x1++
 			d += A
@@ -148,10 +148,10 @@ func (image *Image) drawOctant7(x1, y1, x2, y2, A, B int, c Color) {
 	}
 }
 
-func (image *Image) drawOctant8(x1, y1, x2, y2, A, B int, c Color) {
+func (image *Image) drawOctant8(x1, y1, x2, y2, A, B float64, c Color) {
 	d := A - B/2
 	for x1 <= x2 {
-		image.set(x1, y1, c)
+		image.set(int(x1), int(y1), c)
 		if d < 0 {
 			y1--
 			d -= B
