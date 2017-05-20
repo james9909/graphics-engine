@@ -49,7 +49,6 @@ func NewImage(height, width int) *Image {
 		height: height,
 		width:  width,
 	}
-	image.Fill(Black)
 	return image
 }
 
