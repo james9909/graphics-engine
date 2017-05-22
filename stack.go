@@ -12,7 +12,7 @@ type Stack struct {
 // NewStack returns a new stack
 func NewStack() *Stack {
 	return &Stack{
-		stack: make([]*Matrix, 0, 100),
+		stack: make([]*Matrix, 0, 10),
 	}
 }
 
