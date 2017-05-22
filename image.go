@@ -23,8 +23,8 @@ var (
 
 type Color struct {
 	r byte
-	b byte
 	g byte
+	b byte
 }
 
 func NewColor(r, g, b byte) Color {
