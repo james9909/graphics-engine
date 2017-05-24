@@ -7,8 +7,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"runtime"
 	"strconv"
-	"time"
+	"sync"
 )
 
 const (
@@ -18,25 +19,26 @@ const (
 
 // Parser is a script parser
 type Parser struct {
-	drawer   *Drawer   // image drawer
-	lexer    *Lexer    // lexer
-	backup   []Token   // token backup
-	commands []Command // list of commands
+	lexer  *Lexer  // lexer
+	backup []Token // token backup
 
-	isAnimated   bool                 // whether or not to parse as an animation
-	frames       int                  // number of frames in the animation
-	basename     string               // animation basename
-	formatString string               // format string for each frame of the animation
-	knobs        map[string][]float64 // knob table
+	isAnimated bool   // whether or not to parse as an animation
+	frames     int    // number of frames in the animation
+	basename   string // animation basename
+}
+
+var knobs map[string][]float64 // knob table
+var formatString string        // format string for each frame of the animation
+
+func init() {
+	knobs = make(map[string][]float64)
 }
 
 // NewParser returns a new parser
 func NewParser() *Parser {
 	return &Parser{
-		drawer:     NewDrawer(DefaultHeight, DefaultWidth),
 		backup:     make([]Token, 0, 10),
 		isAnimated: false,
-		knobs:      make(map[string][]float64),
 	}
 }
 
@@ -67,8 +69,7 @@ func (p *Parser) ParseString(input string) error {
 	p.lexer = Lex(input)
 	commands, err := p.parse()
 	if err == nil {
-		p.commands = commands
-		err = p.process()
+		err = p.process(commands)
 	}
 	return err
 }
@@ -85,7 +86,7 @@ func (p *Parser) parse() ([]Command, error) {
 				if p.basename == "" {
 					fmt.Fprintf(os.Stderr, "No basename provided: using default basename '%s'\n", DefaultBasename)
 					p.basename = DefaultBasename
-					p.formatString = fmt.Sprintf("%s/%s-%%0%dd.png", FramesDirectory, p.basename, len(strconv.Itoa(p.frames)))
+					formatString = fmt.Sprintf("%s/%s-%%0%dd.png", FramesDirectory, p.basename, len(strconv.Itoa(p.frames)))
 				}
 			}
 			return commands, nil
@@ -155,7 +156,7 @@ func (p *Parser) parse() ([]Command, error) {
 					return nil, errors.New("number of frames is not set")
 				}
 				name := p.nextString()
-				knob, found := p.knobs[name]
+				knob, found := knobs[name]
 				if !found {
 					knob = make([]float64, p.frames)
 				}
@@ -175,14 +176,14 @@ func (p *Parser) parse() ([]Command, error) {
 					knob[frame] = startValue
 					startValue += delta
 				}
-				p.knobs[name] = knob
+				knobs[name] = knob
 				p.isAnimated = true
 			case BASENAME:
 				if p.basename != "" {
 					fmt.Fprintln(os.Stderr, "Setting the basename multiple times")
 				}
 				p.basename = p.nextString()
-				p.formatString = fmt.Sprintf("%s/%s-%%0%dd.png", FramesDirectory, p.basename, len(strconv.Itoa(p.frames)))
+				formatString = fmt.Sprintf("%s/%s-%%0%dd.png", FramesDirectory, p.basename, len(strconv.Itoa(p.frames)))
 				p.isAnimated = true
 			case FRAMES:
 				if p.frames != 0 {
@@ -224,32 +225,32 @@ func (p *Parser) parse() ([]Command, error) {
 	return commands, nil
 }
 
-func (p *Parser) process() error {
+func (p *Parser) process(commands []Command) error {
 	if p.isAnimated {
 		os.RemoveAll(FramesDirectory)
 		os.Mkdir(FramesDirectory, 0755)
 	} else {
 		p.frames = 1
 	}
+
+	maxWorkers := runtime.GOMAXPROCS(0)
+	var wg sync.WaitGroup
+	jobs := make(chan Job, 100)
+	for i := 0; i < maxWorkers; i++ {
+		wg.Add(1)
+		go worker(NewDrawer(DefaultHeight, DefaultWidth), commands, jobs, &wg)
+	}
+
 	var err error
 	for frame := 0; frame < p.frames; frame++ {
-		if p.isAnimated {
-			fmt.Printf("Rendering frame %d/%d", frame+1, p.frames)
-		}
-		start := time.Now()
-		if err := p.renderFrame(frame); err != nil {
-			return err
-		}
-		elapsed := time.Since(start)
-		if p.isAnimated {
-			fmt.Println(" - ", elapsed)
-			err = p.drawer.Save(fmt.Sprintf(p.formatString, frame))
-			if err != nil {
-				return err
-			}
-			p.drawer.Reset()
+		jobs <- Job{
+			animated: p.isAnimated,
+			frame:    frame,
 		}
 	}
+
+	close(jobs)
+	wg.Wait()
 	if p.isAnimated {
 		fmt.Println("Making animation...")
 		err = MakeAnimation(p.basename)
@@ -257,15 +258,15 @@ func (p *Parser) process() error {
 	return err
 }
 
-func (p *Parser) renderFrame(frame int) error {
+func renderFrame(drawer *Drawer, commands []Command, frame int) error {
 	var err error
-	for _, command := range p.commands {
+	for _, command := range commands {
 		switch command.(type) {
 		case MoveCommand:
 			c := command.(MoveCommand)
 			x, y, z := c.args[0], c.args[1], c.args[2]
 			if c.knob != "" {
-				if knob, err := p.getKnob(c.knob, frame); err == nil {
+				if knob, err := getKnob(c.knob, frame); err == nil {
 					x *= knob
 					y *= knob
 					z *= knob
@@ -273,12 +274,12 @@ func (p *Parser) renderFrame(frame int) error {
 					return err
 				}
 			}
-			err = p.drawer.Move(x, y, z)
+			err = drawer.Move(x, y, z)
 		case ScaleCommand:
 			c := command.(ScaleCommand)
 			x, y, z := c.args[0], c.args[1], c.args[2]
 			if c.knob != "" {
-				if knob, err := p.getKnob(c.knob, frame); err == nil {
+				if knob, err := getKnob(c.knob, frame); err == nil {
 					x *= knob
 					y *= knob
 					z *= knob
@@ -286,46 +287,46 @@ func (p *Parser) renderFrame(frame int) error {
 					return err
 				}
 			}
-			err = p.drawer.Scale(x, y, z)
+			err = drawer.Scale(x, y, z)
 		case RotateCommand:
 			c := command.(RotateCommand)
 			degrees := c.degrees
 			if c.knob != "" {
-				if knob, err := p.getKnob(c.knob, frame); err == nil {
+				if knob, err := getKnob(c.knob, frame); err == nil {
 					degrees *= knob
 				} else {
 					return err
 				}
 			}
-			err = p.drawer.Rotate(c.axis, degrees)
+			err = drawer.Rotate(c.axis, degrees)
 		case LineCommand:
 			c := command.(LineCommand)
-			err = p.drawer.Line(c.p1[0], c.p1[1], c.p1[2], c.p2[0], c.p2[1], c.p2[2])
+			err = drawer.Line(c.p1[0], c.p1[1], c.p1[2], c.p2[0], c.p2[1], c.p2[2])
 		case SphereCommand:
 			c := command.(SphereCommand)
-			err = p.drawer.Sphere(c.center[0], c.center[1], c.center[2], c.radius)
+			err = drawer.Sphere(c.center[0], c.center[1], c.center[2], c.radius)
 		case TorusCommand:
 			c := command.(TorusCommand)
-			err = p.drawer.Torus(c.center[0], c.center[1], c.center[2], c.r1, c.r2)
+			err = drawer.Torus(c.center[0], c.center[1], c.center[2], c.r1, c.r2)
 		case BoxCommand:
 			c := command.(BoxCommand)
-			err = p.drawer.Box(c.p1[0], c.p1[1], c.p1[2], c.width, c.height, c.depth)
+			err = drawer.Box(c.p1[0], c.p1[1], c.p1[2], c.width, c.height, c.depth)
 		case PopCommand:
-			p.drawer.Pop()
+			drawer.Pop()
 		case PushCommand:
-			p.drawer.Push()
+			drawer.Push()
 		case SaveCommand:
 			c := command.(SaveCommand)
-			err = p.drawer.Save(c.filename)
+			err = drawer.Save(c.filename)
 		case DisplayCommand:
-			err = p.drawer.Display()
+			err = drawer.Display()
 		case SetCommand:
 			c := command.(SetCommand)
-			p.knobs[c.name][frame] = c.value
+			knobs[c.name][frame] = c.value
 		case SetKnobsCommand:
 			c := command.(SetKnobsCommand)
-			for key := range p.knobs {
-				p.knobs[key][frame] = c.value
+			for key := range knobs {
+				knobs[key][frame] = c.value
 			}
 		case MeshCommand:
 			c := command.(MeshCommand)
@@ -339,10 +340,10 @@ func (p *Parser) renderFrame(frame int) error {
 				var x, y, z float64
 				num, _ := fmt.Sscanf(scanner.Text(), "vertex %f %f %f", &x, &y, &z)
 				if num == 3 {
-					p.drawer.AddPoint(x, y, z)
+					drawer.AddPoint(x, y, z)
 				}
 			}
-			p.drawer.apply(DrawPolygonMode)
+			drawer.apply(DrawPolygonMode)
 		}
 		if err != nil {
 			return err
@@ -351,8 +352,8 @@ func (p *Parser) renderFrame(frame int) error {
 	return err
 }
 
-func (p *Parser) getKnob(name string, frame int) (float64, error) {
-	if knob, found := p.knobs[name]; found {
+func getKnob(name string, frame int) (float64, error) {
+	if knob, found := knobs[name]; found {
 		return knob[frame], nil
 	} else {
 		return 0, fmt.Errorf("undefined knob '%s'", name)
@@ -428,4 +429,35 @@ func (p *Parser) peek() Token {
 	token := p.nextToken()
 	p.unread(token)
 	return token
+}
+
+// Job is a struct that tells a worker thread which frames to render
+type Job struct {
+	frame    int  // frame to render
+	animated bool // whether the frame is part of an animation
+}
+
+// worker is a worker thread that renders frames
+func worker(drawer *Drawer, commands []Command, jobs chan Job, wg *sync.WaitGroup) {
+	defer wg.Done()
+	for {
+		select {
+		case job, ok := <-jobs:
+			if !ok {
+				return
+			}
+			if job.animated {
+				fmt.Println("Rendering frame", job.frame)
+			}
+
+			err := renderFrame(drawer, commands, job.frame)
+			if job.animated {
+				err = drawer.Save(fmt.Sprintf(formatString, job.frame))
+				if err != nil {
+					return
+				}
+				drawer.Reset()
+			}
+		}
+	}
 }
