@@ -11,7 +11,7 @@ const (
 	// StepSize is the number of steps to take when drawing 2D curves
 	StepSize float64 = (1.0 / 100.0)
 	//CircularStepSize is the number of steps to take when drawing 3D curves
-	CircularStepSize float64 = (1.0 / 20.0)
+	CircularStepSize float64 = (1.0 / 10.0)
 )
 
 // Matrix represents a matrix
