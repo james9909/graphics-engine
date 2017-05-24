@@ -17,18 +17,14 @@ const (
 )
 
 var (
-	Black = NewColor(0, 0, 0)
-	White = NewColor(255, 255, 255)
+	Black = Color{0, 0, 0}
+	White = Color{255, 255, 255}
 )
 
 type Color struct {
 	r byte
 	g byte
 	b byte
-}
-
-func NewColor(r, g, b byte) Color {
-	return Color{r, g, b}
 }
 
 // Image represents an image
