@@ -194,7 +194,7 @@ func (image *Image) SavePpm(name string) error {
 		adjustedY := image.height - y - 1
 		for x := 0; x < image.width; x++ {
 			color := image.frame[adjustedY][x]
-			fmt.Fprintln(w, color.r, color.b, color.g)
+			fmt.Fprintln(w, color.r, color.g, color.b)
 		}
 	}
 	return nil
