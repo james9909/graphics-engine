@@ -201,10 +201,8 @@ func (image *Image) SavePpm(name string) error {
 // Save will save an Image into a given format
 func (image *Image) Save(name string) error {
 	index := strings.Index(name, ".")
-	extension := ".ppm"
-	if index == -1 {
-		extension = ".png"
-	} else {
+	extension := ".png"
+	if index != -1 {
 		extension = name[index:]
 		name = name[:index]
 	}
