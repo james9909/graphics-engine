@@ -17,6 +17,13 @@ const (
 	FramesDirectory = "frames" // FramesDirectory is the directory containing all animation frames
 )
 
+var knobs map[string][]float64 // knob table
+var formatString string        // format string for each frame of the animation
+
+func init() {
+	knobs = make(map[string][]float64)
+}
+
 // Parser is a script parser
 type Parser struct {
 	lexer  *Lexer  // lexer
@@ -25,13 +32,6 @@ type Parser struct {
 	isAnimated bool   // whether or not to parse as an animation
 	frames     int    // number of frames in the animation
 	basename   string // animation basename
-}
-
-var knobs map[string][]float64 // knob table
-var formatString string        // format string for each frame of the animation
-
-func init() {
-	knobs = make(map[string][]float64)
 }
 
 // NewParser returns a new parser
