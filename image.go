@@ -22,9 +22,9 @@ var (
 )
 
 type Color struct {
-	r int
-	g int
-	b int
+	r byte
+	g byte
+	b byte
 }
 
 // Image represents an image
@@ -185,14 +185,12 @@ func (image *Image) SavePpm(name string) error {
 	defer w.Flush()
 
 	fmt.Fprintln(w, "P6", image.width, image.height, 255)
-	pixel := make([]byte, 3)
 	for y := 0; y < image.height; y++ {
 		// Adjust y coordinate that the origin is the bottom left
 		adjustedY := image.height - y - 1
 		for x := 0; x < image.width; x++ {
 			color := image.frame[adjustedY][x]
-			pixel[0], pixel[1], pixel[2] = byte(color.r), byte(color.g), byte(color.b)
-			w.Write(pixel)
+			w.Write([]byte{color.r, color.g, color.b})
 		}
 	}
 	return nil
