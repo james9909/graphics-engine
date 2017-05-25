@@ -22,9 +22,9 @@ var (
 )
 
 type Color struct {
-	r byte
-	g byte
-	b byte
+	r int
+	g int
+	b int
 }
 
 // Image represents an image
@@ -184,13 +184,15 @@ func (image *Image) SavePpm(name string) error {
 	w := bufio.NewWriter(f)
 	defer w.Flush()
 
-	fmt.Fprintln(w, "P3", image.width, image.height, 255)
+	fmt.Fprintln(w, "P6", image.width, image.height, 255)
+	pixel := make([]byte, 3)
 	for y := 0; y < image.height; y++ {
 		// Adjust y coordinate that the origin is the bottom left
 		adjustedY := image.height - y - 1
 		for x := 0; x < image.width; x++ {
 			color := image.frame[adjustedY][x]
-			fmt.Fprintln(w, color.r, color.g, color.b)
+			pixel[0], pixel[1], pixel[2] = byte(color.r), byte(color.g), byte(color.b)
+			w.Write(pixel)
 		}
 	}
 	return nil
