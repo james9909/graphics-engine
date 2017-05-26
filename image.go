@@ -115,7 +115,7 @@ func (image *Image) DrawLine(x1, y1, z1, x2, y2, z2 float64, c Color) {
 
 func (image *Image) drawOctant1(x1, y1, z1, x2, y2, z2, A, B float64, c Color) {
 	d := A + B/2
-	dz := (z2 - z1) / (y2 - y1)
+	dz := (z2 - z1) / (x2 - x1)
 	for x1 <= x2 {
 		image.set(int(x1), int(y1), z1, c)
 		if d > 0 {
@@ -160,7 +160,7 @@ func (image *Image) drawOctant7(x1, y1, z1, x2, y2, z2, A, B float64, c Color) {
 
 func (image *Image) drawOctant8(x1, y1, z1, x2, y2, z2, A, B float64, c Color) {
 	d := A - B/2
-	dz := (z2 - z1) / (y2 - y1)
+	dz := (z2 - z1) / (x2 - x1)
 	for x1 <= x2 {
 		image.set(int(x1), int(y1), z1, c)
 		if d < 0 {
