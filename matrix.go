@@ -320,23 +320,23 @@ func (m *Matrix) AddBox(x, y, z, width, height, depth float64) {
 	z1 := z - depth
 
 	// Front
-	m.AddTriangle(x, y1, z, x, y, z, x1, y, z)
-	m.AddTriangle(x, y1, z, x1, y, z, x1, y1, z)
+	m.AddTriangle(x, y, z, x1, y1, z, x1, y, z)
+	m.AddTriangle(x, y, z, x, y1, z, x1, y1, z)
 	// Back
-	m.AddTriangle(x1, y1, z1, x1, y, z1, x, y, z1)
-	m.AddTriangle(x1, y1, z1, x, y, z1, x, y1, z1)
+	m.AddTriangle(x1, y, z1, x, y1, z1, x, y, z1)
+	m.AddTriangle(x1, y, z1, x1, y1, z1, x, y1, z1)
 	// Top
-	m.AddTriangle(x, y1, z1, x, y1, z, x1, y1, z)
-	m.AddTriangle(x, y1, z1, x1, y1, z, x1, y1, z1)
+	m.AddTriangle(x, y, z1, x1, y, z, x1, y, z1)
+	m.AddTriangle(x, y, z1, x, y, z, x1, y, z)
 	// Bottom
-	m.AddTriangle(x1, y, z1, x1, y, z, x, y, z)
-	m.AddTriangle(x1, y, z1, x, y, z, x, y, z1)
+	m.AddTriangle(x, y1, z, x1, y1, z1, x1, y1, z)
+	m.AddTriangle(x, y1, z, x, y1, z1, x1, y1, z1)
 	// Left
-	m.AddTriangle(x, y1, z1, x, y, z1, x, y, z)
-	m.AddTriangle(x, y1, z1, x, y, z, x, y1, z)
+	m.AddTriangle(x, y, z1, x, y1, z, x, y, z)
+	m.AddTriangle(x, y, z1, x, y1, z1, x, y1, z)
 	// Right
-	m.AddTriangle(x1, y1, z, x1, y, z, x1, y, z1)
-	m.AddTriangle(x1, y1, z, x1, y, z1, x1, y1, z1)
+	m.AddTriangle(x1, y, z, x1, y1, z1, x1, y, z1)
+	m.AddTriangle(x1, y, z, x1, y1, z, x1, y1, z1)
 }
 
 // AddSphere adds a series of points defining a 3D sphere to the matrix
