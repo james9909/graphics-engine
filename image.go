@@ -160,7 +160,7 @@ func (image *Image) drawOctant8(x1, y1, x2, y2, A, B float64, c Color) {
 func (image *Image) Fill(c Color) {
 	for y := 0; y < image.height; y++ {
 		for x := 0; x < image.width; x++ {
-			image.set(x, y, c)
+			image.frame[y][x] = c
 		}
 	}
 }
