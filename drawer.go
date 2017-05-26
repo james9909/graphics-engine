@@ -15,9 +15,9 @@ const (
 
 // Drawer is a struct that draws on an image
 type Drawer struct {
-	frame *Image
-	em    *Matrix
-	cs    *Stack
+	frame *Image  // underlying image
+	em    *Matrix // edge/polygon matrix
+	cs    *Stack  // coordinate system stack
 }
 
 func NewDrawer(height, width int) *Drawer {
