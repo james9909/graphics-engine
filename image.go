@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
@@ -181,19 +181,19 @@ func (image *Image) SavePpm(name string) error {
 	}
 	defer f.Close()
 
-	w := bufio.NewWriter(f)
-	defer w.Flush()
-
-	fmt.Fprintln(w, "P6", image.width, image.height, 255)
+	var buffer bytes.Buffer
+	buffer.WriteString(fmt.Sprintln("P6", image.width, image.height, 255))
 	for y := 0; y < image.height; y++ {
 		// Adjust y coordinate that the origin is the bottom left
 		adjustedY := image.height - y - 1
 		for x := 0; x < image.width; x++ {
 			color := image.frame[adjustedY][x]
-			w.Write([]byte{color.r, color.g, color.b})
+			buffer.Write([]byte{color.r, color.g, color.b})
 		}
 	}
-	return nil
+
+	_, err = buffer.WriteTo(f)
+	return err
 }
 
 // Save will save an Image into a given format
