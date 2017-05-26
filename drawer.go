@@ -62,7 +62,7 @@ func (d *Drawer) clear() {
 func (d *Drawer) Reset() {
 	d.clear()
 	d.cs = NewStack()
-	d.frame.Fill(Black)
+	d.frame = NewImage(d.frame.height, d.frame.width)
 }
 
 func (d *Drawer) Line(x0, y0, z0, x1, y1, z1 float64) error {
