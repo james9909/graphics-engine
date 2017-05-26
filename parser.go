@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"runtime"
 	"strconv"
 	"sync"
 )
@@ -15,6 +14,7 @@ import (
 const (
 	DefaultBasename = "frame"  // Default frame basename
 	FramesDirectory = "frames" // FramesDirectory is the directory containing all animation frames
+	MaxWorkers      = 2        // maximum number of workers
 )
 
 var knobs map[string][]float64 // knob table
@@ -233,10 +233,9 @@ func (p *Parser) process(commands []Command) error {
 		p.frames = 1
 	}
 
-	maxWorkers := runtime.GOMAXPROCS(0)
 	var wg sync.WaitGroup
 	jobs := make(chan Job, 100)
-	for i := 0; i < maxWorkers; i++ {
+	for i := 0; i < MaxWorkers; i++ {
 		wg.Add(1)
 		go worker(NewDrawer(DefaultHeight, DefaultWidth), commands, jobs, &wg)
 	}
