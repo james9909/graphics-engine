@@ -144,7 +144,7 @@ func (image *Image) drawOctant2(x1, y1, z1, x2, y2, z2, A, B float64, c Color) {
 }
 
 func (image *Image) drawOctant7(x1, y1, z1, x2, y2, z2, A, B float64, c Color) {
-	d := A/2 + B
+	d := A/2 - B
 	dz := (z2 - z1) / (y2 - y1)
 	for y1 >= y2 {
 		image.set(int(x1), int(y1), z1, c)
