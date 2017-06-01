@@ -82,6 +82,7 @@ func (image *Image) DrawPolygons(em *Matrix, c Color) error {
 			image.DrawLine(p0[0], p0[1], p0[2], p1[0], p1[1], p1[2], c)
 			image.DrawLine(p1[0], p1[1], p1[2], p2[0], p2[1], p2[2], c)
 			image.DrawLine(p2[0], p2[1], p2[2], p0[0], p0[1], p0[2], c)
+			image.Scanline(p0, p1, p2, Color{255, 0, 0})
 		}
 	}
 	return nil
@@ -269,4 +270,54 @@ func isVisible(p0, p1, p2 []float64) bool {
 	b := []float64{p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2]}
 	normal := CrossProduct(a, b)
 	return normal[2] > 0
+}
+
+func (image *Image) Scanline(p0, p1, p2 []float64, c Color) {
+	// fmt.Println("Scanning", p0, p1, p2)
+	// reorder points so that p0 is the lowest and p2 is the highest
+	if p0[1] > p1[1] {
+		p0, p1 = p1, p0
+	}
+	if p0[1] > p2[1] {
+		p0, p2 = p2, p0
+	}
+	if p1[1] > p2[1] {
+		p1, p2 = p2, p1
+	}
+
+	x0 := p0[0]
+	x1 := p0[0]
+	dx0 := (p2[0] - p0[0]) / (p2[1] - p0[1])
+	dx1 := (p1[0] - p0[0]) / (p1[1] - p0[1])
+
+	y := math.Floor(p0[1])
+
+	z0 := p0[2]
+	z1 := p0[2]
+	dz0 := (p2[2] - p0[2]) / (p2[1] - p0[1])
+	dz1 := (p1[2] - p0[2]) / (p2[1] - p0[1])
+	// Fill bottom half of polygon
+	for y < math.Floor(p1[1]) {
+		x0 += dx0
+		x1 += dx1
+		y++
+		z0 += dz0
+		z1 += dz1
+		// fmt.Println("Filling bottom", x0, y, z0, x1, y, z1)
+		image.DrawLine(x0, y, z0, x1, y, z1, c)
+	}
+
+	x1 = p1[0]
+	z1 = p1[2]
+	dx1 = (p2[0] - p1[0]) / (p2[1] - p1[1])
+	// Fill top half
+	for y < math.Floor(p2[1]) {
+		x0 += dx0
+		x1 += dx1
+		y++
+		z0 += dz0
+		z1 += dz1
+		// fmt.Println("Filling top", x0, y, z0, x1, y, z1)
+		image.DrawLine(x0, y, z0, x1, y, z1, c)
+	}
 }
