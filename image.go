@@ -89,88 +89,88 @@ func (image *Image) DrawPolygons(em *Matrix, c Color) error {
 }
 
 // DrawLine draws a single line onto the Image
-func (image *Image) DrawLine(x1, y1, z1, x2, y2, z2 float64, c Color) {
-	if x1 > x2 {
-		x1, x2 = x2, x1
-		y1, y2 = y2, y1
-		z1, z2 = z2, z1
+func (image *Image) DrawLine(x0, y0, z0, x1, y1, z1 float64, c Color) {
+	if x0 > x1 {
+		x0, x1 = x1, x0
+		y0, y1 = y1, y0
+		z0, z1 = z1, z0
 	}
 
-	A := 2 * (y2 - y1)
-	B := 2 * -(x2 - x1)
+	A := 2 * (y1 - y0)
+	B := 2 * -(x1 - x0)
 	m := A / -B
 	if m >= 0 {
 		if m <= 1 {
-			image.drawOctant1(x1, y1, z1, x2, y2, z2, A, B, c)
+			image.drawOctant1(x0, y0, z0, x1, y1, z1, A, B, c)
 		} else {
-			image.drawOctant2(x1, y1, z1, x2, y2, z2, A, B, c)
+			image.drawOctant2(x0, y0, z0, x1, y1, z1, A, B, c)
 		}
 	} else {
 		if m < -1 {
-			image.drawOctant7(x1, y1, z1, x2, y2, z2, A, B, c)
+			image.drawOctant7(x0, y0, z0, x1, y1, z1, A, B, c)
 		} else {
-			image.drawOctant8(x1, y1, z1, x2, y2, z2, A, B, c)
+			image.drawOctant8(x0, y0, z0, x1, y1, z1, A, B, c)
 		}
 	}
 }
 
-func (image *Image) drawOctant1(x1, y1, z1, x2, y2, z2, A, B float64, c Color) {
+func (image *Image) drawOctant1(x0, y0, z0, x1, y1, z1, A, B float64, c Color) {
 	d := A + B/2
-	dz := (z2 - z1) / (x2 - x1)
-	for x1 <= x2 {
-		image.set(int(x1), int(y1), z1, c)
+	dz := (z1 - z0) / (x1 - x0)
+	for x0 <= x1 {
+		image.set(int(x0), int(y0), z0, c)
 		if d > 0 {
-			y1++
+			y0++
 			d += B
 		}
-		x1++
+		x0++
 		d += A
-		z1 += dz
+		z0 += dz
 	}
 }
 
-func (image *Image) drawOctant2(x1, y1, z1, x2, y2, z2, A, B float64, c Color) {
+func (image *Image) drawOctant2(x0, y0, z0, x1, y1, z1, A, B float64, c Color) {
 	d := A/2 + B
-	dz := (z2 - z1) / (y2 - y1)
-	for y1 <= y2 {
-		image.set(int(x1), int(y1), z1, c)
+	dz := (z1 - z0) / (y1 - y0)
+	for y0 <= y1 {
+		image.set(int(x0), int(y0), z0, c)
 		if d < 0 {
-			x1++
+			x0++
 			d += A
 		}
-		y1++
+		y0++
 		d += B
-		z1 += dz
+		z0 += dz
 	}
 }
 
-func (image *Image) drawOctant7(x1, y1, z1, x2, y2, z2, A, B float64, c Color) {
+func (image *Image) drawOctant7(x0, y0, z0, x1, y1, z1, A, B float64, c Color) {
 	d := A/2 - B
-	dz := (z2 - z1) / (y2 - y1)
-	for y1 >= y2 {
-		image.set(int(x1), int(y1), z1, c)
+	dz := (z1 - z0) / (y1 - y0)
+	for y0 >= y1 {
+		image.set(int(x0), int(y0), z0, c)
 		if d > 0 {
-			x1++
+			x0++
 			d += A
 		}
-		y1--
+		y0--
 		d -= B
-		z1 += dz
+		z0 += dz
 	}
 }
 
-func (image *Image) drawOctant8(x1, y1, z1, x2, y2, z2, A, B float64, c Color) {
+func (image *Image) drawOctant8(x0, y0, z0, x1, y1, z1, A, B float64, c Color) {
 	d := A - B/2
-	dz := (z2 - z1) / (x2 - x1)
-	for x1 <= x2 {
-		image.set(int(x1), int(y1), z1, c)
+	dz := (z1 - z0) / (x1 - x0)
+	for x0 <= x1 {
+		image.set(int(x0), int(y0), z0, c)
 		if d < 0 {
-			y1--
+			y0--
 			d -= B
 		}
-		x1++
+		x0++
 		d += A
-		z1 += dz
+		z0 += dz
 	}
 }
 
