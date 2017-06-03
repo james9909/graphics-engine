@@ -64,7 +64,7 @@ func (image *Image) DrawLines(em *Matrix, c Color) error {
 	for i := 0; i < em.cols-1; i += 2 {
 		p0 := em.GetColumn(i)
 		p1 := em.GetColumn(i + 1)
-		image.DrawLine(p0[0], p0[1], p0[2], p1[0], p1[1], p1[2], c)
+		image.DrawLine(int(p0[0]), int(p0[1]), p0[2], int(p1[0]), int(p1[1]), p1[2], c)
 	}
 	return nil
 }
@@ -79,9 +79,9 @@ func (image *Image) DrawPolygons(em *Matrix, c Color) error {
 		p1 := em.GetColumn(i + 1)
 		p2 := em.GetColumn(i + 2)
 		if isVisible(p0, p1, p2) {
-			image.DrawLine(p0[0], p0[1], p0[2], p1[0], p1[1], p1[2], c)
-			image.DrawLine(p1[0], p1[1], p1[2], p2[0], p2[1], p2[2], c)
-			image.DrawLine(p2[0], p2[1], p2[2], p0[0], p0[1], p0[2], c)
+			image.DrawLine(int(p0[0]), int(p0[1]), p0[2], int(p1[0]), int(p1[1]), p1[2], c)
+			image.DrawLine(int(p1[0]), int(p1[1]), p1[2], int(p2[0]), int(p2[1]), p2[2], c)
+			image.DrawLine(int(p2[0]), int(p2[1]), p2[2], int(p0[0]), int(p0[1]), p0[2], c)
 			image.Scanline(p0, p1, p2, Color{255, 0, 0})
 		}
 	}
@@ -89,88 +89,75 @@ func (image *Image) DrawPolygons(em *Matrix, c Color) error {
 }
 
 // DrawLine draws a single line onto the Image
-func (image *Image) DrawLine(x0, y0, z0, x1, y1, z1 float64, c Color) {
+func (image *Image) DrawLine(x0 int, y0 int, z0 float64, x1 int, y1 int, z1 float64, c Color) {
 	if x0 > x1 {
 		x0, x1 = x1, x0
 		y0, y1 = y1, y0
 		z0, z1 = z1, z0
 	}
 
-	A := 2 * (y1 - y0)
-	B := 2 * -(x1 - x0)
+	A := 2 * float64(y1-y0)
+	B := 2 * -float64(x1-x0)
 	m := A / -B
 	if m >= 0 {
 		if m <= 1 {
-			image.drawOctant1(x0, y0, z0, x1, y1, z1, A, B, c)
+			// Draw octants 1 and 5
+			d := A + B/2
+			dz := (z1 - z0) / float64(x1-x0)
+			for x0 <= x1 {
+				image.set(x0, y0, z0, c)
+				if d > 0 {
+					y0++
+					d += B
+				}
+				x0++
+				d += A
+				z0 += dz
+			}
 		} else {
-			image.drawOctant2(x0, y0, z0, x1, y1, z1, A, B, c)
+			// Draw octants 2 and 6
+			d := A/2 + B
+			dz := (z1 - z0) / float64(y1-y0)
+			for y0 <= y1 {
+				image.set(x0, y0, z0, c)
+				if d < 0 {
+					x0++
+					d += A
+				}
+				y0++
+				d += B
+				z0 += dz
+			}
 		}
 	} else {
 		if m < -1 {
-			image.drawOctant7(x0, y0, z0, x1, y1, z1, A, B, c)
+			// Draw octants 3 and 7
+			d := A/2 - B
+			dz := (z1 - z0) / float64(y1-y0)
+			for y0 >= y1 {
+				image.set(x0, y0, z0, c)
+				if d > 0 {
+					x0++
+					d += A
+				}
+				y0--
+				d -= B
+				z0 += dz
+			}
 		} else {
-			image.drawOctant8(x0, y0, z0, x1, y1, z1, A, B, c)
+			d := A - B/2
+			dz := (z1 - z0) / float64(x1-x0)
+			for x0 <= x1 {
+				image.set(x0, y0, z0, c)
+				if d < 0 {
+					y0--
+					d -= B
+				}
+				x0++
+				d += A
+				z0 += dz
+			}
 		}
-	}
-}
-
-func (image *Image) drawOctant1(x0, y0, z0, x1, y1, z1, A, B float64, c Color) {
-	d := A + B/2
-	dz := (z1 - z0) / (x1 - x0)
-	for x0 <= x1 {
-		image.set(int(x0), int(y0), z0, c)
-		if d > 0 {
-			y0++
-			d += B
-		}
-		x0++
-		d += A
-		z0 += dz
-	}
-}
-
-func (image *Image) drawOctant2(x0, y0, z0, x1, y1, z1, A, B float64, c Color) {
-	d := A/2 + B
-	dz := (z1 - z0) / (y1 - y0)
-	for y0 <= y1 {
-		image.set(int(x0), int(y0), z0, c)
-		if d < 0 {
-			x0++
-			d += A
-		}
-		y0++
-		d += B
-		z0 += dz
-	}
-}
-
-func (image *Image) drawOctant7(x0, y0, z0, x1, y1, z1, A, B float64, c Color) {
-	d := A/2 - B
-	dz := (z1 - z0) / (y1 - y0)
-	for y0 >= y1 {
-		image.set(int(x0), int(y0), z0, c)
-		if d > 0 {
-			x0++
-			d += A
-		}
-		y0--
-		d -= B
-		z0 += dz
-	}
-}
-
-func (image *Image) drawOctant8(x0, y0, z0, x1, y1, z1, A, B float64, c Color) {
-	d := A - B/2
-	dz := (z1 - z0) / (x1 - x0)
-	for x0 <= x1 {
-		image.set(int(x0), int(y0), z0, c)
-		if d < 0 {
-			y0--
-			d -= B
-		}
-		x0++
-		d += A
-		z0 += dz
 	}
 }
 
@@ -273,8 +260,7 @@ func isVisible(p0, p1, p2 []float64) bool {
 }
 
 func (image *Image) Scanline(p0, p1, p2 []float64, c Color) {
-	// fmt.Println("Scanning", p0, p1, p2)
-	// reorder points so that p0 is the lowest and p2 is the highest
+	// Re-order points so that p0 is the lowest and p2 is the highest
 	if p0[1] > p1[1] {
 		p0, p1 = p1, p0
 	}
@@ -284,40 +270,53 @@ func (image *Image) Scanline(p0, p1, p2 []float64, c Color) {
 	if p1[1] > p2[1] {
 		p1, p2 = p2, p1
 	}
+	if p0[1] == p1[1] {
+		if p1[0] < p0[1] {
+			p0, p1 = p1, p0
+		}
+	}
+	if p1[1] == p2[1] {
+		if p2[0] < p1[0] {
+			p1, p2 = p2, p1
+		}
+	}
 
 	x0 := p0[0]
-	x1 := p0[0]
-	dx0 := (p2[0] - p0[0]) / (p2[1] - p0[1])
-	dx1 := (p1[0] - p0[0]) / (p1[1] - p0[1])
+	x1 := x0
+	dx0 := (p2[0] - p0[0]) / float64(int(p2[1])-int(p0[1]))
+	dx1 := (p1[0] - p0[0]) / float64(int(p1[1])-int(p0[1]))
 
-	y := math.Floor(p0[1])
+	y := int(p0[1])
 
 	z0 := p0[2]
 	z1 := p0[2]
 	dz0 := (p2[2] - p0[2]) / (p2[1] - p0[1])
-	dz1 := (p1[2] - p0[2]) / (p2[1] - p0[1])
+	var dz1 float64
+	if p0[1] != p1[1] {
+		dz1 = (p1[2] - p0[2]) / (p1[1] - p0[1])
+	} else {
+		dz1 = (p2[2] - p1[2]) / (p2[1] - p1[1])
+	}
 	// Fill bottom half of polygon
-	for y < math.Floor(p1[1]) {
+	for y < int(p1[1]) {
 		x0 += dx0
 		x1 += dx1
 		y++
 		z0 += dz0
 		z1 += dz1
-		// fmt.Println("Filling bottom", x0, y, z0, x1, y, z1)
-		image.DrawLine(x0, y, z0, x1, y, z1, c)
+		image.DrawLine(int(x0), y, z0, int(x1), y, z1, c)
 	}
 
 	x1 = p1[0]
 	z1 = p1[2]
-	dx1 = (p2[0] - p1[0]) / (p2[1] - p1[1])
-	// Fill top half
-	for y < math.Floor(p2[1]) {
+	dx1 = (p2[0] - p1[0]) / float64(int(p2[1])-int(p1[1]))
+	// Fill top half of polygon
+	for y < int(p2[1]) {
 		x0 += dx0
 		x1 += dx1
 		y++
 		z0 += dz0
 		z1 += dz1
-		// fmt.Println("Filling top", x0, y, z0, x1, y, z1)
-		image.DrawLine(x0, y, z0, x1, y, z1, c)
+		image.DrawLine(int(x0), y, z0, int(x1), y, z1, c)
 	}
 }
