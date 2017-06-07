@@ -253,9 +253,7 @@ func MakeAnimation(basename string) error {
 }
 
 func isVisible(p0, p1, p2 []float64) bool {
-	a := []float64{p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]}
-	b := []float64{p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2]}
-	normal := CrossProduct(a, b)
+	normal := Normal(p0, p1, p2)
 	return normal[2] > 0
 }
 
