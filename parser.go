@@ -18,10 +18,20 @@ const (
 )
 
 var knobs map[string][]float64 // knob table
-var formatString string        // format string for each frame of the animation
+
+// Lighting
+var ambient []float64                 // ambient lighting
+var lightSources map[string][]float64 // light table
+var lights [][]float64                // lighting values
+var constants map[string][][]float64  // constants table
+
+var formatString string // format string for each frame of the animation
 
 func init() {
 	knobs = make(map[string][]float64)
+
+	lightSources = make(map[string][]float64)
+	constants = make(map[string][][]float64)
 }
 
 // Parser is a script parser
@@ -68,6 +78,7 @@ func (p *Parser) ParseFile(filename string) error {
 func (p *Parser) ParseString(input string) error {
 	p.lexer = Lex(input)
 	commands, err := p.parse()
+	lights = getLights()
 	if err == nil {
 		err = p.process(commands)
 	}
@@ -210,6 +221,32 @@ func (p *Parser) parse() ([]Command, error) {
 					filename: p.nextString(),
 				}
 				command = c
+			case LIGHT:
+				name := p.nextString()
+				_, found := lightSources[name]
+				if found {
+					return nil, fmt.Errorf("light %s is already defined", name)
+				}
+				lightSources[name] = []float64{p.nextFloat(), p.nextFloat(), p.nextFloat()}
+				p.nextFloat()
+				p.nextFloat()
+				p.nextFloat()
+			case AMBIENT:
+				ambient = []float64{p.nextFloat(), p.nextFloat(), p.nextFloat()}
+			case CONSTANTS:
+				constant := make([][]float64, 4)
+				name := p.nextString()
+				kar, kdr, ksr, kag, kdg, ksg, kab, kdb, ksb := p.nextFloat(), p.nextFloat(), p.nextFloat(), p.nextFloat(), p.nextFloat(), p.nextFloat(), p.nextFloat(), p.nextFloat(), p.nextFloat()
+				constant[0] = []float64{kar, kag, kab} // ambient
+				constant[1] = []float64{kdr, kdg, kdb} // diffuse
+				constant[2] = []float64{ksr, ksg, ksb} // specular
+				next := p.peek().tt
+				if next == tFloat || next == tInt {
+					constant[3] = []float64{p.nextFloat(), p.nextFloat(), p.nextFloat()}
+				} else {
+					constant[3] = []float64{0, 0, 0}
+				}
+				constants[name] = constant
 			}
 			if command != nil {
 				commands = append(commands, command)
@@ -301,15 +338,55 @@ func renderFrame(drawer *Drawer, commands []Command, frame int) error {
 		case LineCommand:
 			c := command.(LineCommand)
 			err = drawer.Line(c.p1[0], c.p1[1], c.p1[2], c.p2[0], c.p2[1], c.p2[2])
+			if err != nil {
+				return err
+			}
+			err = drawer.DrawLines(White)
 		case SphereCommand:
 			c := command.(SphereCommand)
 			err = drawer.Sphere(c.center[0], c.center[1], c.center[2], c.radius)
+			if err != nil {
+				return err
+			}
+			if c.constants != "" {
+				if constant, err := getConstants(c.constants); err == nil {
+					err = drawer.DrawShadedPolygons(constant, lights)
+				} else {
+					return err
+				}
+			} else {
+				drawer.DrawPolygons(White)
+			}
 		case TorusCommand:
 			c := command.(TorusCommand)
 			err = drawer.Torus(c.center[0], c.center[1], c.center[2], c.r1, c.r2)
+			if err != nil {
+				return err
+			}
+			if c.constants != "" {
+				if constant, err := getConstants(c.constants); err == nil {
+					err = drawer.DrawShadedPolygons(constant, lights)
+				} else {
+					return err
+				}
+			} else {
+				drawer.DrawPolygons(White)
+			}
 		case BoxCommand:
 			c := command.(BoxCommand)
 			err = drawer.Box(c.p1[0], c.p1[1], c.p1[2], c.width, c.height, c.depth)
+			if err != nil {
+				return err
+			}
+			if c.constants != "" {
+				if constant, err := getConstants(c.constants); err == nil {
+					err = drawer.DrawShadedPolygons(constant, lights)
+				} else {
+					return err
+				}
+			} else {
+				drawer.DrawPolygons(White)
+			}
 		case PopCommand:
 			drawer.Pop()
 		case PushCommand:
@@ -342,7 +419,8 @@ func renderFrame(drawer *Drawer, commands []Command, frame int) error {
 					drawer.AddPoint(x, y, z)
 				}
 			}
-			drawer.apply(DrawPolygonMode)
+			drawer.apply()
+			drawer.DrawPolygons(White)
 		}
 		if err != nil {
 			return err
@@ -357,6 +435,21 @@ func getKnob(name string, frame int) (float64, error) {
 	} else {
 		return 0, fmt.Errorf("undefined knob '%s'", name)
 	}
+}
+
+func getConstants(name string) ([][]float64, error) {
+	if constant, found := constants[name]; found {
+		return constant, nil
+	}
+	return nil, fmt.Errorf("undefined constant '%s'", name)
+}
+
+func getLights() [][]float64 {
+	lights := make([][]float64, 0, len(lightSources))
+	for _, light := range lightSources {
+		lights = append(lights, light)
+	}
+	return lights
 }
 
 // nextToken returns the nextToken token from the lexer

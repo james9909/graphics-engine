@@ -2,16 +2,10 @@ package main
 
 import (
 	"errors"
-	"fmt"
 )
 
 // DrawMode defines the type of each drawing mode
 type DrawMode int
-
-const (
-	DrawLineMode    DrawMode = iota // DrawLineMode is a draw argument that draws 2D lines onto the Image
-	DrawPolygonMode                 // DrawPolygonMode is a draw argument that draws 3D polygons onto the Image
-)
 
 // Drawer is a struct that draws on an image
 type Drawer struct {
@@ -28,29 +22,30 @@ func NewDrawer(height, width int) *Drawer {
 	}
 }
 
-func (d *Drawer) apply(mode DrawMode) error {
+func (d *Drawer) apply() error {
 	product, err := d.cs.Peek().Multiply(d.em)
 	if err != nil {
 		return err
 	}
 	d.em = product
-	if err := d.draw(mode); err != nil {
-		return err
-	}
-	d.clear()
 	return nil
 }
 
-func (d *Drawer) draw(mode DrawMode) error {
-	var err error
-	switch mode {
-	case DrawLineMode:
-		err = d.frame.DrawLines(d.em, White)
-	case DrawPolygonMode:
-		err = d.frame.DrawPolygons(d.em, White)
-	default:
-		err = fmt.Errorf("undefined draw mode %s", mode)
-	}
+func (d *Drawer) DrawLines(c Color) error {
+	err := d.frame.DrawLines(d.em, c)
+	d.clear()
+	return err
+}
+
+func (d *Drawer) DrawPolygons(c Color) error {
+	err := d.frame.DrawPolygons(d.em, c)
+	d.clear()
+	return err
+}
+
+func (d *Drawer) DrawShadedPolygons(constants, lights [][]float64) error {
+	err := d.frame.DrawShadedPolygons(d.em, ambient, constants, lights)
+	d.clear()
 	return err
 }
 
@@ -67,7 +62,7 @@ func (d *Drawer) Reset() {
 
 func (d *Drawer) Line(x0, y0, z0, x1, y1, z1 float64) error {
 	d.em.AddEdge(x0, y0, z0, x1, y1, z1)
-	err := d.apply(DrawLineMode)
+	err := d.apply()
 	return err
 }
 
@@ -129,37 +124,37 @@ func (d *Drawer) Display() error {
 
 func (d *Drawer) Circle(cx, cy, cz, radius float64) error {
 	d.em.AddCircle(cx, cy, cz, radius)
-	err := d.apply(DrawLineMode)
+	err := d.apply()
 	return err
 }
 
 func (d *Drawer) Hermite(x0, y0, x1, y1, dx0, dy0, dx1, dy1 float64) error {
 	d.em.AddHermite(x0, y0, x1, y1, dx0, dy0, dx1, dy1)
-	err := d.apply(DrawLineMode)
+	err := d.apply()
 	return err
 }
 
 func (d *Drawer) Bezier(x0, y0, x1, y1, x2, y2, x3, y3 float64) error {
 	d.em.AddBezier(x0, y0, x1, y1, x2, y2, x3, y3)
-	err := d.apply(DrawLineMode)
+	err := d.apply()
 	return err
 }
 
 func (d *Drawer) Box(x, y, z, width, height, depth float64) error {
 	d.em.AddBox(x, y, z, width, height, depth)
-	err := d.apply(DrawPolygonMode)
+	err := d.apply()
 	return err
 }
 
 func (d *Drawer) Sphere(cx, cy, cz, radius float64) error {
 	d.em.AddSphere(cx, cy, cz, radius)
-	err := d.apply(DrawPolygonMode)
+	err := d.apply()
 	return err
 }
 
 func (d *Drawer) Torus(cx, cy, cz, r1, r2 float64) error {
 	d.em.AddTorus(cx, cy, cz, r1, r2)
-	err := d.apply(DrawPolygonMode)
+	err := d.apply()
 	return err
 }
 

@@ -28,6 +28,24 @@ type Color struct {
 	b byte
 }
 
+func (c *Color) limit() {
+	if c.r < 0 {
+		c.r = 0
+	} else if c.r > 255 {
+		c.r = 255
+	}
+	if c.g < 0 {
+		c.g = 0
+	} else if c.g > 255 {
+		c.g = 255
+	}
+	if c.b < 0 {
+		c.b = 0
+	} else if c.b > 255 {
+		c.b = 255
+	}
+}
+
 // Image represents an image
 type Image struct {
 	frame   [][]Color
@@ -82,7 +100,33 @@ func (image *Image) DrawPolygons(em *Matrix, c Color) error {
 			image.DrawLine(int(p0[0]), int(p0[1]), p0[2], int(p1[0]), int(p1[1]), p1[2], c)
 			image.DrawLine(int(p1[0]), int(p1[1]), p1[2], int(p2[0]), int(p2[1]), p2[2], c)
 			image.DrawLine(int(p2[0]), int(p2[1]), p2[2], int(p0[0]), int(p0[1]), p0[2], c)
-			image.Scanline(p0, p1, p2, Color{255, 0, 0})
+		}
+	}
+	return nil
+}
+
+// DrawShadedPolygons draws all polygons onto the Image using scanline conversion
+func (image *Image) DrawShadedPolygons(em *Matrix, ambient []float64, constants, lights [][]float64) error {
+	if em.cols < 3 {
+		return errors.New("3 or more points are required for drawing")
+	}
+	for i := 0; i < em.cols-2; i += 3 {
+		p0 := em.GetColumn(i)
+		p1 := em.GetColumn(i + 1)
+		p2 := em.GetColumn(i + 2)
+		if isVisible(p0, p1, p2) {
+			I_a := ambient
+			K_a := constants[0]
+			K_d := constants[1]
+			K_s := constants[2]
+			I_i := constants[3]
+			c := FlatShading(p0, p1, p2, I_a, K_a, I_i, K_d, K_s, DefaultViewVector, lights)
+			color := Color{byte(c[0]), byte(c[1]), byte(c[2])}
+			color.limit()
+			image.DrawLine(int(p0[0]), int(p0[1]), p0[2], int(p1[0]), int(p1[1]), p1[2], color)
+			image.DrawLine(int(p1[0]), int(p1[1]), p1[2], int(p2[0]), int(p2[1]), p2[2], color)
+			image.DrawLine(int(p2[0]), int(p2[1]), p2[2], int(p0[0]), int(p0[1]), p0[2], color)
+			image.Scanline(p0, p1, p2, color)
 		}
 	}
 	return nil

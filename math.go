@@ -1,5 +1,7 @@
 package main
 
+import "math"
+
 // CrossProduct calculates the cross product of two vectors
 func CrossProduct(a, b []float64) []float64 {
 	if len(a) < 3 || len(b) < 3 {
@@ -30,4 +32,45 @@ func DotProduct(a, b []float64) float64 {
 		sum += a[i] * b[i]
 	}
 	return sum
+}
+
+func Magnitude(a []float64) float64 {
+	magnitude := 0.0
+	for i := range a {
+		magnitude += a[i] * a[i]
+	}
+	return math.Sqrt(magnitude)
+}
+
+func Normalize(a []float64) []float64 {
+	magnitude := Magnitude(a)
+	normalized := make([]float64, len(a))
+	for i := range a {
+		normalized[i] = a[i] / magnitude
+	}
+	return normalized
+}
+
+func Add(a, b []float64) []float64 {
+	sum := make([]float64, len(a))
+	for i := range a {
+		sum[i] = a[i] + b[i]
+	}
+	return sum
+}
+
+func Subtract(a, b []float64) []float64 {
+	difference := make([]float64, len(a))
+	for i := range a {
+		difference[i] = a[i] - b[i]
+	}
+	return difference
+}
+
+func Scale(a []float64, factor float64) []float64 {
+	scaled := make([]float64, len(a))
+	for i := range a {
+		scaled[i] = a[i] * factor
+	}
+	return scaled
 }
