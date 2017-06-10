@@ -44,10 +44,15 @@ func flatDiffuseLight(p0, p1, p2, I_i, K_d []float64, light LightSource) []float
 	normal = Normalize(normal)
 	diffuseVector := DotProduct(lightVector, normal)
 
-	diffuse := []float64{
-		float64(light.color.r) * K_d[0] * diffuseVector,
-		float64(light.color.g) * K_d[1] * diffuseVector,
-		float64(light.color.b) * K_d[2] * diffuseVector,
+	diffuse := make([]float64, 3)
+	if I_i[0] > 0 || I_i[1] > 0 || I_i[2] > 0 {
+		copy(diffuse, I_i)
+	} else {
+		diffuse = []float64{float64(light.color.r), float64(light.color.g), float64(light.color.b)}
+	}
+
+	for i := range diffuse {
+		diffuse[i] = diffuse[i] * K_d[i] * diffuseVector
 	}
 
 	for i := range diffuse {
@@ -68,10 +73,15 @@ func flatSpecularLight(p0, p1, p2, I_i, K_s []float64, light LightSource, view [
 	reflect := Normalize(Subtract(Scale(normal, dot*2), light.location))
 	specularVector := DotProduct(reflect, view)
 
-	specular := []float64{
-		float64(light.color.r) * K_s[0] * specularVector,
-		float64(light.color.g) * K_s[1] * specularVector,
-		float64(light.color.b) * K_s[2] * specularVector,
+	specular := make([]float64, 3)
+	if I_i[0] > 0 || I_i[1] > 0 || I_i[2] > 0 {
+		copy(specular, I_i)
+	} else {
+		specular = []float64{float64(light.color.r), float64(light.color.g), float64(light.color.b)}
+	}
+
+	for i := range specular {
+		specular[i] = specular[i] * K_s[i] * specularVector
 	}
 
 	for i := range specular {
