@@ -43,8 +43,8 @@ func (d *Drawer) DrawPolygons(c Color) error {
 	return err
 }
 
-func (d *Drawer) DrawShadedPolygons(constants, lights [][]float64) error {
-	err := d.frame.DrawShadedPolygons(d.em, ambient, constants, lights)
+func (d *Drawer) DrawShadedPolygons(constants [][]float64, lightSources map[string]LightSource) error {
+	err := d.frame.DrawShadedPolygons(d.em, ambient, constants, lightSources)
 	d.clear()
 	return err
 }

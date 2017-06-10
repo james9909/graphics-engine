@@ -20,17 +20,16 @@ const (
 var knobs map[string][]float64 // knob table
 
 // Lighting
-var ambient []float64                 // ambient lighting
-var lightSources map[string][]float64 // light table
-var lights [][]float64                // lighting values
-var constants map[string][][]float64  // constants table
+var ambient []float64                   // ambient lighting
+var lightSources map[string]LightSource // light table
+var constants map[string][][]float64    // constants table
 
 var formatString string // format string for each frame of the animation
 
 func init() {
 	knobs = make(map[string][]float64)
 
-	lightSources = make(map[string][]float64)
+	lightSources = make(map[string]LightSource)
 	constants = make(map[string][][]float64)
 }
 
@@ -78,7 +77,6 @@ func (p *Parser) ParseFile(filename string) error {
 func (p *Parser) ParseString(input string) error {
 	p.lexer = Lex(input)
 	commands, err := p.parse()
-	lights = getLights()
 	if err == nil {
 		err = p.process(commands)
 	}
@@ -227,10 +225,11 @@ func (p *Parser) parse() ([]Command, error) {
 				if found {
 					return nil, fmt.Errorf("light %s is already defined", name)
 				}
-				lightSources[name] = []float64{p.nextFloat(), p.nextFloat(), p.nextFloat()}
-				p.nextFloat()
-				p.nextFloat()
-				p.nextFloat()
+				lightSource := LightSource{
+					color:    Color{byte(p.nextInt()), byte(p.nextInt()), byte(p.nextInt())},
+					location: []float64{p.nextFloat(), p.nextFloat(), p.nextFloat()},
+				}
+				lightSources[name] = lightSource
 			case AMBIENT:
 				ambient = []float64{p.nextFloat(), p.nextFloat(), p.nextFloat()}
 			case CONSTANTS:
@@ -350,7 +349,7 @@ func renderFrame(drawer *Drawer, commands []Command, frame int) error {
 			}
 			if c.constants != "" {
 				if constant, err := getConstants(c.constants); err == nil {
-					err = drawer.DrawShadedPolygons(constant, lights)
+					err = drawer.DrawShadedPolygons(constant, lightSources)
 				} else {
 					return err
 				}
@@ -365,7 +364,7 @@ func renderFrame(drawer *Drawer, commands []Command, frame int) error {
 			}
 			if c.constants != "" {
 				if constant, err := getConstants(c.constants); err == nil {
-					err = drawer.DrawShadedPolygons(constant, lights)
+					err = drawer.DrawShadedPolygons(constant, lightSources)
 				} else {
 					return err
 				}
@@ -380,7 +379,7 @@ func renderFrame(drawer *Drawer, commands []Command, frame int) error {
 			}
 			if c.constants != "" {
 				if constant, err := getConstants(c.constants); err == nil {
-					err = drawer.DrawShadedPolygons(constant, lights)
+					err = drawer.DrawShadedPolygons(constant, lightSources)
 				} else {
 					return err
 				}
@@ -442,14 +441,6 @@ func getConstants(name string) ([][]float64, error) {
 		return constant, nil
 	}
 	return nil, fmt.Errorf("undefined constant '%s'", name)
-}
-
-func getLights() [][]float64 {
-	lights := make([][]float64, 0, len(lightSources))
-	for _, light := range lightSources {
-		lights = append(lights, light)
-	}
-	return lights
 }
 
 // nextToken returns the nextToken token from the lexer

@@ -1,10 +1,15 @@
 package main
 
 var (
-	DefaultViewVector = []float64{0, 0, -1}
+	DefaultViewVector = []float64{0, 0, 1}
 )
 
-func FlatShading(p0, p1, p2, I_a, K_a, I_i, K_d, K_s, view []float64, lights [][]float64) []float64 {
+type LightSource struct {
+	location []float64
+	color    Color
+}
+
+func FlatShading(p0, p1, p2, I_a, K_a, I_i, K_d, K_s, view []float64, lights map[string]LightSource) []float64 {
 	I := []float64{0, 0, 0}
 	ambient := flatAmbientLight(I_a, K_a)
 	for a := range ambient {
@@ -32,17 +37,17 @@ func flatAmbientLight(I_a, K_a []float64) []float64 {
 	return ambient
 }
 
-func flatDiffuseLight(p0, p1, p2, I_i, K_d, light []float64) []float64 {
+func flatDiffuseLight(p0, p1, p2, I_i, K_d []float64, light LightSource) []float64 {
 	normal := Normal(p0, p1, p2)
 
-	light = Normalize(light)
+	lightVector := Normalize(light.location)
 	normal = Normalize(normal)
-	diffuseVector := DotProduct(light, normal)
+	diffuseVector := DotProduct(lightVector, normal)
 
 	diffuse := []float64{
-		I_i[0] * K_d[0] * diffuseVector,
-		I_i[1] * K_d[1] * diffuseVector,
-		I_i[2] * K_d[2] * diffuseVector,
+		float64(light.color.r) * K_d[0] * diffuseVector,
+		float64(light.color.g) * K_d[1] * diffuseVector,
+		float64(light.color.b) * K_d[2] * diffuseVector,
 	}
 
 	for i := range diffuse {
@@ -53,20 +58,20 @@ func flatDiffuseLight(p0, p1, p2, I_i, K_d, light []float64) []float64 {
 	return diffuse
 }
 
-func flatSpecularLight(p0, p1, p2, I_i, K_s, light, view []float64) []float64 {
+func flatSpecularLight(p0, p1, p2, I_i, K_s []float64, light LightSource, view []float64) []float64 {
 	normal := Normal(p0, p1, p2)
 
-	light = Normalize(light)
+	lightVector := Normalize(light.location)
 	normal = Normalize(normal)
-	dot := DotProduct(light, normal)
+	dot := DotProduct(lightVector, normal)
 
-	reflect := Normalize(Subtract(Scale(normal, dot*2), light))
+	reflect := Normalize(Subtract(Scale(normal, dot*2), light.location))
 	specularVector := DotProduct(reflect, view)
 
 	specular := []float64{
-		I_i[0] * K_s[0] * specularVector,
-		I_i[1] * K_s[1] * specularVector,
-		I_i[2] * K_s[2] * specularVector,
+		float64(light.color.r) * K_s[0] * specularVector,
+		float64(light.color.g) * K_s[1] * specularVector,
+		float64(light.color.b) * K_s[2] * specularVector,
 	}
 
 	for i := range specular {

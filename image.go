@@ -106,7 +106,7 @@ func (image *Image) DrawPolygons(em *Matrix, c Color) error {
 }
 
 // DrawShadedPolygons draws all polygons onto the Image using scanline conversion
-func (image *Image) DrawShadedPolygons(em *Matrix, ambient []float64, constants, lights [][]float64) error {
+func (image *Image) DrawShadedPolygons(em *Matrix, ambient []float64, constants [][]float64, lights map[string]LightSource) error {
 	if em.cols < 3 {
 		return errors.New("3 or more points are required for drawing")
 	}
