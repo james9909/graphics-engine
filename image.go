@@ -357,8 +357,6 @@ func (image *Image) Scanline(p0, p1, p2 []float64, c Color) {
 		x0 += dx0
 		x1 += dx1
 		y++
-		z0 += dz0
-		z1 += dz1
 		image.DrawLine(int(x0), y, z0, int(x1), y, z1, c)
 	}
 }
