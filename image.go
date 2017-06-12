@@ -123,9 +123,6 @@ func (image *Image) DrawShadedPolygons(em *Matrix, ambient []float64, constants 
 			c := FlatShading(p0, p1, p2, I_a, K_a, I_i, K_d, K_s, DefaultViewVector, lights)
 			color := Color{byte(c[0]), byte(c[1]), byte(c[2])}
 			color.limit()
-			image.DrawLine(int(p0[0]), int(p0[1]), p0[2], int(p1[0]), int(p1[1]), p1[2], color)
-			image.DrawLine(int(p1[0]), int(p1[1]), p1[2], int(p2[0]), int(p2[1]), p2[2], color)
-			image.DrawLine(int(p2[0]), int(p2[1]), p2[2], int(p0[0]), int(p0[1]), p0[2], color)
 			image.Scanline(p0, p1, p2, color)
 		}
 	}
@@ -332,13 +329,8 @@ func (image *Image) Scanline(p0, p1, p2 []float64, c Color) {
 
 	z0 := p0[2]
 	z1 := p0[2]
-	dz0 := (p2[2] - p0[2]) / (p2[1] - p0[1])
-	var dz1 float64
-	if p0[1] != p1[1] {
-		dz1 = (p1[2] - p0[2]) / (p1[1] - p0[1])
-	} else {
-		dz1 = (p2[2] - p1[2]) / (p2[1] - p1[1])
-	}
+	dz0 := (p2[2] - p0[2]) / float64(int(p2[1])-int(p0[1]))
+	dz1 := (p1[2] - p0[2]) / float64(int(p1[1])-int(p0[1]))
 	// Fill bottom half of polygon
 	for y < int(p1[1]) {
 		x0 += dx0
@@ -352,11 +344,14 @@ func (image *Image) Scanline(p0, p1, p2 []float64, c Color) {
 	x1 = p1[0]
 	z1 = p1[2]
 	dx1 = (p2[0] - p1[0]) / float64(int(p2[1])-int(p1[1]))
+	dz1 = (p2[2] - p1[2]) / float64(int(p2[1])-int(p1[1]))
 	// Fill top half of polygon
 	for y < int(p2[1]) {
 		x0 += dx0
 		x1 += dx1
 		y++
+		z0 += dz0
+		z1 += dz1
 		image.DrawLine(int(x0), y, z0, int(x1), y, z1, c)
 	}
 }
