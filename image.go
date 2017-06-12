@@ -49,7 +49,7 @@ func (c *Color) limit() {
 // Image represents an image
 type Image struct {
 	frame   [][]Color
-	zBuffer [][]float64
+	zBuffer [][]int
 	height  int
 	width   int
 }
@@ -57,12 +57,12 @@ type Image struct {
 // NewImage returns a new Image with the given height and width
 func NewImage(height, width int) *Image {
 	frame := make([][]Color, height)
-	zBuffer := make([][]float64, height)
+	zBuffer := make([][]int, height)
 	for i := 0; i < height; i++ {
 		frame[i] = make([]Color, width)
-		zBuffer[i] = make([]float64, width)
+		zBuffer[i] = make([]int, width)
 		for j := 0; j < width; j++ {
-			zBuffer[i][j] = math.Inf(-1)
+			zBuffer[i][j] = -math.MaxInt64
 		}
 	}
 	image := &Image{
@@ -133,7 +133,7 @@ func (image *Image) DrawShadedPolygons(em *Matrix, ambient []float64, constants 
 }
 
 // DrawLine draws a single line onto the Image
-func (image *Image) DrawLine(x0 int, y0 int, z0 float64, x1 int, y1 int, z1 float64, c Color) {
+func (image *Image) DrawLine(x0, y0 int, z0 float64, x1, y1 int, z1 float64, c Color) {
 	if x0 > x1 {
 		x0, x1 = x1, x0
 		y0, y1 = y1, y0
@@ -149,7 +149,7 @@ func (image *Image) DrawLine(x0 int, y0 int, z0 float64, x1 int, y1 int, z1 floa
 			d := A + B/2
 			dz := (z1 - z0) / float64(x1-x0)
 			for x0 <= x1 {
-				image.set(x0, y0, z0, c)
+				image.set(x0, y0, int(z0), c)
 				if d > 0 {
 					y0++
 					d += B
@@ -163,7 +163,7 @@ func (image *Image) DrawLine(x0 int, y0 int, z0 float64, x1 int, y1 int, z1 floa
 			d := A/2 + B
 			dz := (z1 - z0) / float64(y1-y0)
 			for y0 <= y1 {
-				image.set(x0, y0, z0, c)
+				image.set(x0, y0, int(z0), c)
 				if d < 0 {
 					x0++
 					d += A
@@ -179,7 +179,7 @@ func (image *Image) DrawLine(x0 int, y0 int, z0 float64, x1 int, y1 int, z1 floa
 			d := A/2 - B
 			dz := (z1 - z0) / float64(y1-y0)
 			for y0 >= y1 {
-				image.set(x0, y0, z0, c)
+				image.set(x0, y0, int(z0), c)
 				if d > 0 {
 					x0++
 					d += A
@@ -192,7 +192,7 @@ func (image *Image) DrawLine(x0 int, y0 int, z0 float64, x1 int, y1 int, z1 floa
 			d := A - B/2
 			dz := (z1 - z0) / float64(x1-x0)
 			for x0 <= x1 {
-				image.set(x0, y0, z0, c)
+				image.set(x0, y0, int(z0), c)
 				if d < 0 {
 					y0--
 					d -= B
@@ -214,7 +214,7 @@ func (image *Image) Fill(c Color) {
 	}
 }
 
-func (image *Image) set(x, y int, z float64, c Color) {
+func (image *Image) set(x, y, z int, c Color) {
 	if (x < 0 || x >= image.width) || (y < 0 || y >= image.height) {
 		return
 	}
