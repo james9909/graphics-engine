@@ -1,5 +1,7 @@
 package main
 
+import "math"
+
 var (
 	DefaultViewVector = []float64{0, 0, 1}
 )
@@ -52,14 +54,9 @@ func flatDiffuseLight(p0, p1, p2, I_i, K_d []float64, light LightSource) []float
 	}
 
 	for i := range diffuse {
-		diffuse[i] = diffuse[i] * K_d[i] * diffuseVector
+		diffuse[i] = math.Max(diffuse[i]*K_d[i]*diffuseVector, 0)
 	}
 
-	for i := range diffuse {
-		if diffuse[i] < 0 {
-			diffuse[i] = 0
-		}
-	}
 	return diffuse
 }
 
@@ -81,13 +78,8 @@ func flatSpecularLight(p0, p1, p2, I_i, K_s []float64, light LightSource, view [
 	}
 
 	for i := range specular {
-		specular[i] = specular[i] * K_s[i] * specularVector
+		specular[i] = math.Max(specular[i]*K_s[i]*specularVector, 0)
 	}
 
-	for i := range specular {
-		if specular[i] < 0 {
-			specular[i] = 0
-		}
-	}
 	return specular
 }
