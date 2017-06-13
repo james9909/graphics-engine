@@ -309,16 +309,6 @@ func (image *Image) Scanline(p0, p1, p2 []float64, c Color) {
 	if p1[1] > p2[1] {
 		p1, p2 = p2, p1
 	}
-	if p0[1] == p1[1] {
-		if p1[0] < p0[1] {
-			p0, p1 = p1, p0
-		}
-	}
-	if p1[1] == p2[1] {
-		if p2[0] < p1[0] {
-			p1, p2 = p2, p1
-		}
-	}
 
 	x0 := p0[0]
 	x1 := x0
