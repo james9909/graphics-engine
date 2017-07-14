@@ -6,3 +6,7 @@ A graphics engine written in Go.
 Compile the program with `make`
 
 To run the graphics engine, run `./main <script>`
+
+#### Examples
+
+![robot.gif](robot.gif)
