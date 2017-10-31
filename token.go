@@ -108,7 +108,7 @@ func (tt TokenType) String() string {
 	if s, isToken := tokens[tt]; isToken {
 		return s
 	}
-	return fmt.Sprint("token(", tt, ")")
+	return fmt.Sprint("token(", int(tt), ")")
 }
 
 func (t Token) String() string {
