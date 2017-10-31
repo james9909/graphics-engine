@@ -258,7 +258,6 @@ func (p *Parser) parse() ([]Command, error) {
 			return nil, fmt.Errorf("unrecognized identifier: \"%s\"", t.value)
 		}
 	}
-	return commands, nil
 }
 
 func (p *Parser) process(commands []Command) error {
@@ -431,9 +430,8 @@ func renderFrame(drawer *Drawer, commands []Command, frame int) error {
 func getKnob(name string, frame int) (float64, error) {
 	if knob, found := knobs[name]; found {
 		return knob[frame], nil
-	} else {
-		return 0, fmt.Errorf("undefined knob '%s'", name)
 	}
+	return 0, fmt.Errorf("undefined knob '%s'", name)
 }
 
 func getConstants(name string) ([][]float64, error) {
