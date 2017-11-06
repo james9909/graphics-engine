@@ -171,7 +171,7 @@ func (p *Parser) parse() ([]Command, error) {
 				}
 				startFrame := p.nextInt()
 				if startFrame < 0 || startFrame >= p.frames {
-					return nil, fmt.Errorf("invalid start frame %d for knob %s", startFrame, num)
+					return nil, fmt.Errorf("invalid start frame %d for knob %s", startFrame, name)
 				}
 				endFrame := p.nextInt()
 				if endFrame < 0 || endFrame >= p.frames || endFrame < startFrame {
