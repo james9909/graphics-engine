@@ -250,8 +250,8 @@ func (p *Parser) parse() ([]Command, error) {
 			if command != nil {
 				commands = append(commands, command)
 			}
-			next := p.nextToken().tt
-			if next != tNewline && next != tEOF {
+			next := p.nextToken()
+			if next.tt != tNewline && next.tt != tEOF {
 				return nil, fmt.Errorf("unexpected %v at end of statement", next)
 			}
 		case tString:

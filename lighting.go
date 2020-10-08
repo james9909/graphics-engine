@@ -1,6 +1,8 @@
 package main
 
-import "math"
+import (
+	"math"
+)
 
 var (
 	DefaultViewVector = []float64{0, 0, 1}
